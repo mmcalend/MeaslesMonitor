@@ -56,7 +56,7 @@ def tab5_view(df_schools):
     <div style='text-align:center; margin-bottom:1em;'>
       <h2 style='margin-bottom:0.3em;'>School Details</h2>
       <div style='display:flex; flex-wrap:wrap; justify-content:center; gap:1rem;'>
-        <div title='Total Students Enrolled' style='background:#393855; color:white; padding:0.8rem; border-radius:8px; width:160px;'>
+        <div title='Total Kindergarten Students Enrolled' style='background:#393855; color:white; padding:0.8rem; border-radius:8px; width:160px;'>
           <strong>Total Students Enrolled:</strong> {enrollment:,}
         </div>
         <div title='MMR Immunization Rate' style='background:#4b4971; color:white; padding:0.8rem; border-radius:8px; width:160px;'>
