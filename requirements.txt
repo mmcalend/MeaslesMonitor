@@ -1,7 +1,7 @@
-streamlit
+streamlit>=1.21.0
 pandas
 numpy
 plotly
 gdown
-streamlit>=1.21.0
+
 
