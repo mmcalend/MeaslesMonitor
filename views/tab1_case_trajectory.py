@@ -8,7 +8,7 @@ from helpers import apply_common_plot_layout
 def tab1_view(df):
     df["state"] = df["state"].str.title()
     states = ["United States"] + sorted(df["state"].unique())
-    state_display = st.selectbox("Select a state", states, searchable="True)
+    state_display = st.selectbox("Select a state", states, searchable=True)
     state = state_display
     filtered = df if state == "United States" else df[df["state"] == state]
     weekly = filtered.groupby("mmwr_week_start", as_index=False)["cases"].sum()
