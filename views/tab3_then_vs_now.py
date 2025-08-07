@@ -7,7 +7,7 @@ from helpers import apply_common_plot_layout
 import plotly.graph_objects as go
 
 def tab3_view(df, df19, mmr):
-    state = st.selectbox("Select a state for 2019 vs 2025 comparison", ["United States"] + sorted(df19["State"].unique()), searchable=True)
+    state = st.selectbox("Select a state for 2019 vs 2025 comparison", ["United States"] + sorted(df19["State"].unique()))
 
     # --- Merge 2025 and 2019 case data ---
     state_cases = df.groupby('code')['cases'].sum().reset_index()
