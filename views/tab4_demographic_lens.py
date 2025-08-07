@@ -44,23 +44,11 @@ def tab4_view(dfdetails):
     }
 
     # --- Death/hospitalization/survival ---
-       st.markdown(
-        "<h2 style='text-align: center; margin-bottom: 0.5rem;'>"
-        "Measles Outcomes in 2025</h2>",
-        unsafe_allow_html=True
+    st.markdown("<h2 style='text-align: center; margin-bottom: 0.5rem;'>Measles Outcomes in 2025</h2>", unsafe_allow_html=True)
+    st.plotly_chart(
+        stacked_bar_chart({k: v / total_cases for k, v in death_groups.items()}, "", colors=death_colors),
+        use_container_width=True, config={"responsive": True}
     )
-    
-    fig = stacked_bar_chart(
-        {k: v / total_cases for k, v in death_groups.items()},
-        "",
-        colors=death_colors
-    )
-    
-    fig.update_traces(
-        hovertemplate="<b>%{name}</b><br>%{x:.1f}%<extra></extra>"
-    )
-
-    st.plotly_chart(fig, use_container_width=True, config={"responsive": True})
 
     # --- Age & hospitalization pictograms side-by-side ---
     st.markdown("<h2 style='text-align: center; margin-bottom: 0.5rem;'>Age Distribution and Hospitalization Among Measles Cases</h2>", unsafe_allow_html=True)
