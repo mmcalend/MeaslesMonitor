@@ -15,9 +15,10 @@ def tab3_view(df, df19, mmr):
     filtered_merged = merged if state == "United States" else merged[merged["State"] == state]
 
     # --- Measles 2019 vs 2025 comparison chart ---
+    state_names = filtered_merged["State"]
     fig = go.Figure([
-        go.Bar(x=filtered_merged["code"], y=filtered_merged["cases"], name="2025 Cases", marker_color="#6A4C93", opacity=0.8),
-        go.Scatter(x=filtered_merged["code"], y=filtered_merged["Cases"], mode="lines", fill="tozeroy", name="2019 Cases", line=dict(color="#B497BD"))
+        go.Bar(x=filtered_merged["code"], y=filtered_merged["cases"], name="2025 Cases", marker_color="#6A4C93", opacity=0.8, customdata=state_names, hovertemplate=("%{customdata}<br>" "2025 Cases: %{y}<extra></extra>" ))
+        go.Scatter(x=filtered_merged["code"], y=filtered_merged["Cases"], mode="lines", fill="tozeroy", name="2019 Cases", line=dict(color="#B497BD"), customdata=state_names, hovertemplate=("%{customdata}<br>" "2019 Cases: %{y}<extra></extra>" ))
     ])
     fig.update_layout(
         barmode="overlay",
@@ -58,7 +59,7 @@ def tab3_view(df, df19, mmr):
     x_codes = filtered_mmr_comparison["code"]
     y_2018 = filtered_mmr_comparison["MMR Rate 2018-19"]
     y_2023 = filtered_mmr_comparison["MMR Rate 2023-24"]
-
+    
     below_thresh = (y_2023 < threshold).sum()
     
 
@@ -78,15 +79,16 @@ def tab3_view(df, df19, mmr):
             hoverinfo='skip'
         ))
 
-   
+    state_names = filtered_mmr_comparison["state"]
     fig.add_trace(go.Scatter(
         x=y_2018,
         y=x_codes,
         mode='markers',
         name="2018–19",
         marker=dict(size=10, color="#B497BD", symbol="circle-open"),
+        customdata=state_names,
         hovertemplate=(
-        "%{y}<br>"
+        "%{customdata}<br>"
         "<br>2018–19: %{x}%<extra></extra>"
     )
     ))
@@ -98,8 +100,9 @@ def tab3_view(df, df19, mmr):
         mode='markers',
         name="2023–24",
         marker=dict(size=10, color="#6A4C93", symbol="circle"),
+        customdata=state_names,
         hovertemplate=(
-        "%{y}<br>"
+        "%{customdata}<br>"
         "<br>2023–24: %{x}%<extra></extra>"
     )
     ))
