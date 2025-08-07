@@ -44,7 +44,7 @@ def tab5_view(df_schools):
     st.markdown("<h2 style='text-align:center; margin:0.75em 0 0.5em;'>Choose Simulation Mode</h2>", unsafe_allow_html=True)
     mode = st.radio("", ["Select a School", "Enter Custom Values"], horizontal=True)
     if mode == "Select a School":
-        sel = st.selectbox("School:", df_schools["SCHOOL NAME"].sort_values())
+        sel = st.selectbox("School:", df_schools["SCHOOL NAME"].sort_values(), searchable=True)
         data = df_schools[df_schools["SCHOOL NAME"]==sel].iloc[0]
         enrollment = int(data["ENROLLED"])
         immune = float(data["IMMUNE_MMR"])
