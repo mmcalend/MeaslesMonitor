@@ -12,7 +12,7 @@ def tab5_view(df_schools):
       <h1 style='margin-bottom:0.2em;'>Arizona Measles Outbreak Simulator</h1>
       <p style='font-size:1.1rem; margin-top:0; margin-bottom:0.5em;'>
         Estimate the impact of measles on school communities, including infections, hospitalizations, absences, and more.<br>
-        <em>Note: Schools with fewer than 20 students are excluded from the selection list.</em>
+        <em>Note: Schools with fewer than 20 kindergarten students are excluded from the selection list.</em>
       </p>
       <h2 style='text-align:center; margin:0.75em 0 0.5em;'>Assumptions & Data Sources</h2>
     </div>
@@ -20,7 +20,7 @@ def tab5_view(df_schools):
       <div tabindex="0" title='PubMed: R₀ = 12 (PMID: 28757186)' style='background:#2f2e41; color:white; padding:1rem; border-radius:10px; width:200px; cursor:help;'>
         <strong>R₀:</strong><br>12 <a href="https://pubmed.ncbi.nlm.nih.gov/28757186/" target="_blank" style="color:#a5c9ff;">PubMed</a>
       </div>
-      <div tabindex="0" title='ADHS: MMR kindergarten coverage for 2024–25 (schools ≥20 students)' style='background:#3d3c5a; color:white; padding:1rem; border-radius:10px; width:200px; cursor:help;'>
+      <div tabindex="0" title='ADHS: MMR kindergarten coverage for 2024–25 (schools ≥20 kindergarten students)' style='background:#3d3c5a; color:white; padding:1rem; border-radius:10px; width:200px; cursor:help;'>
         <strong>MMR Rate:</strong><br>ADHS 2024–25 <a href="https://www.azdhs.gov/preparedness/epidemiology-disease-control/immunization/#reports-immunization-coverage" target="_blank" style="color:#a5c9ff;">ADHS</a>
       </div>
       <div tabindex="0" title='NFID: Hospitalization rate ≈ 20%' style='background:#47465c; color:white; padding:1rem; border-radius:10px; width:200px; cursor:help;'>
