@@ -17,7 +17,7 @@ def tab3_view(df, df19, mmr):
     # --- Measles 2019 vs 2025 comparison chart ---
     state_names = filtered_merged["State"]
     fig = go.Figure([
-        go.Bar(x=filtered_merged["code"], y=filtered_merged["cases"], name="2025 Cases", marker_color="#6A4C93", opacity=0.8, customdata=state_names, hovertemplate=("%{customdata}<br>" "2025 Cases: %{y}<extra></extra>" ))
+        go.Bar(x=filtered_merged["code"], y=filtered_merged["cases"], name="2025 Cases", marker_color="#6A4C93", opacity=0.8, customdata=state_names, hovertemplate=("%{customdata}<br>" "2025 Cases: %{y}<extra></extra>" )),
         go.Scatter(x=filtered_merged["code"], y=filtered_merged["Cases"], mode="lines", fill="tozeroy", name="2019 Cases", line=dict(color="#B497BD"), customdata=state_names, hovertemplate=("%{customdata}<br>" "2019 Cases: %{y}<extra></extra>" ))
     ])
     fig.update_layout(
