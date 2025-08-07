@@ -129,7 +129,7 @@ def stacked_bar_chart(data, title, colors):
         fig.add_trace(go.Bar(
             y=[""], x=[value * 100], orientation="h", name=label,
             marker=dict(color=colors[i % len(colors)]), offsetgroup=i,
-            base=x_base, text=f"{value * 100:.1f}%", textposition="inside", hoverinfo="text"
+            base=x_base, text=f"{value * 100:.1f}%", textposition="inside", hoverinfo="text", hovertemplate="<b>%{name}</b><br>%{x:.0%}<extra></extra>"
         ))
         x_base += value * 100
 
