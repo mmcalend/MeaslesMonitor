@@ -44,69 +44,31 @@ def tab4_view(dfdetails):
     }
 
     # --- Death/hospitalization/survival ---
-    st.markdown(
-        "<h2 style='text-align: center; margin-bottom: 0.5rem;'>"
-        "Measles Outcomes in 2025</h2>",
-        unsafe_allow_html=True
+    st.markdown("<h2 style='text-align: center; margin-bottom: 0.5rem;'>Measles Outcomes in 2025</h2>", unsafe_allow_html=True)
+    st.plotly_chart(
+        stacked_bar_chart({k: v / total_cases for k, v in death_groups.items()}, "", colors=death_colors),
+        use_container_width=True, config={"responsive": True}
     )
 
-
-    fig = stacked_bar_chart(
-        {k: v / total_cases for k, v in death_groups.items()},
-        "",
-        colors=death_colors
-    )
-
-    abs_counts = [death_groups[trace.name] for trace in fig.data]
-
-
-    fig.update_traces(
-        customdata=abs_counts,
-        hovertemplate=(
-            "<b>%{name}</b><br>"
-            "%{customdata} cases (<b>%{x:.1f}%</b>)"
-            "<extra></extra>"
-        )
-    )
-
-
-    st.plotly_chart(fig, use_container_width=True, config={"responsive": True})
-
-    st.markdown(
-        "<h2 style='text-align: center; margin-bottom: 0.5rem;'>"
-        "Age Distribution and Hospitalization Among Measles Cases</h2>",
-        unsafe_allow_html=True
-    )
-    _, col1, col2, _ = st.columns([2, 3, 3, 2])
+    # --- Age & hospitalization pictograms side-by-side ---
+    st.markdown("<h2 style='text-align: center; margin-bottom: 0.5rem;'>Age Distribution and Hospitalization Among Measles Cases</h2>", unsafe_allow_html=True)
+    left, col1, col2, right = st.columns([2, 3, 3, 2])
 
     with col1:
-        st.plotly_chart(
-            proportional_pictogram_bar(age_groups, "", total_cases, colors=age_colors),
-            use_container_width=False
-        )
+        st.plotly_chart(proportional_pictogram_bar(age_groups, "", total_cases, colors=age_colors), use_container_width=False)
 
     with col2:
         hospitalized_age_data = {
             age: {"yes": hosp_proportions_within_age[age]}
             for age in hosp_proportions_within_age
         }
-        st.plotly_chart(
-            subset_proportional_pictogram_bar(hospitalized_age_data, "", colors=age_colors),
-            use_container_width=False
-        )
+        st.plotly_chart(subset_proportional_pictogram_bar(hospitalized_age_data, "", colors=age_colors), use_container_width=False)
 
+    # --- Vaccination pictogram ---
+    st.markdown("<h2 style='text-align: center; margin-bottom: 0.5rem;'>Measles Cases by Vaccination Status</h2>", unsafe_allow_html=True)
+    st.plotly_chart(stacked_bar_chart(vaccine_groups, "", colors=vaccine_colors), use_container_width=True)
 
-    st.markdown(
-        "<h2 style='text-align: center; margin-bottom: 0.5rem;'>"
-        "Measles Cases by Vaccination Status</h2>",
-        unsafe_allow_html=True
-    )
-    st.plotly_chart(
-        stacked_bar_chart(vaccine_groups, "", colors=vaccine_colors),
-        use_container_width=True
-    )
-
-
+    # --- Explanatory Markdown ---
     st.markdown("""
     <div style='text-align: left; font-size: 1.1rem; line-height: 1.5; margin: 1rem auto;'>
         The graphs above show demographics of 2025 measles cases in the United States:
@@ -124,4 +86,4 @@ def tab4_view(dfdetails):
         <a href='https://www.cdc.gov/measles/data-research/index.html' target='_blank'>
         Data Source: CDC Measles Cases and Outbreaks</a>
     </div>
-    """, unsafe_allow_html=True)
+    """, unsafe_allow_html=True) 
