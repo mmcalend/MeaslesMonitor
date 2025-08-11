@@ -18,7 +18,7 @@ def tab5_view(df_schools):
     """, unsafe_allow_html=True)
 
     # Educational context section with enhanced content
-   with st.expander("Understanding Disease Transmission (Click to Learn More)", expanded=False):
+    if st.expander("Understanding Disease Transmission (Click to Learn More)", expanded=False):
         st.markdown("""
         **Why is measles so contagious?**
         
@@ -39,7 +39,7 @@ def tab5_view(df_schools):
         """)
 
     # Add educational quiz section
-    with st.expander("Test Your Knowledge", expanded=False):
+    if st.expander("Test Your Knowledge", expanded=False):
         st.markdown("**Quick Quiz: How well do you understand measles?**")
         
         quiz_col1, quiz_col2 = st.columns(2)
@@ -135,7 +135,7 @@ def tab5_view(df_schools):
 
     # --- Interactive Learning Section ---
     st.markdown("---")
-    with st.expander("Try This: Herd Immunity Calculator", expanded=False):
+    if st.expander("Try This: Herd Immunity Calculator", expanded=False):
         st.markdown("**Calculate the vaccination rate needed for herd immunity:**")
         
         # Interactive R0 slider
@@ -158,7 +158,7 @@ def tab5_view(df_schools):
         """)
 
     # Add real-world context section
-    with st.expander("Real-World Measles Outbreaks", expanded=False):
+    if st.expander("Real-World Measles Outbreaks", expanded=False):
         st.markdown("""
         **Recent Arizona Measles Cases:**
         - 2024: Several cases linked to international travel
@@ -325,7 +325,7 @@ def tab5_view(df_schools):
     """)
 
     # --- Interactive Timeline ---
-    with st.expander("Interactive Disease Timeline", expanded=False):
+    if st.expander("Interactive Disease Timeline", expanded=False):
         timeline_day = st.slider("Explore the timeline: Day", 0, 30, 0)
         cumulative_cases = np.cumsum(daily)[timeline_day] if timeline_day < len(daily) else total_cases
         remaining_susceptible = max(0, susceptible - cumulative_cases)
@@ -467,7 +467,7 @@ def tab5_view(df_schools):
     """)
 
     # --- Prevention and Action Section ---
-    with st.expander("Prevention & What You Can Do", expanded=False):
+    if st.expander("Prevention & What You Can Do", expanded=False):
         st.markdown("""
         **Preventing Measles Outbreaks:**
         
@@ -491,7 +491,7 @@ def tab5_view(df_schools):
         """)
 
     # --- Resources Section ---
-    with st.expander("Additional Resources", expanded=False):
+    if st.expander("Additional Resources", expanded=False):
         st.markdown("""
         **Reliable Information Sources:**
         
