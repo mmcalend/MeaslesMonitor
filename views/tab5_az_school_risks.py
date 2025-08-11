@@ -394,13 +394,39 @@ def tab5_view(df_schools):
     for i, item in enumerate(summary_data):
         with all_cols[i]:
             st.markdown(f"""
-            <div style= padding:1rem; border-radius:8px; text-align:center; margin-bottom:0.5rem;'>
+            <div style='background:{item["bg_color"]}; color:white; padding:1rem; border-radius:8px; text-align:center; margin-bottom:0.5rem;'>
               <strong>{item["title"]}</strong><br>{item["value"]}
             </div>
             """, unsafe_allow_html=True)
             
             with st.expander(f"Understanding {item['title']}"):
                 st.markdown(item['explanation'])
+
+    # --- Educational Comparison Tool ---
+    st.markdown("---")
+    with st.expander("Compare Different Scenarios", expanded=False):
+        st.markdown("**See how vaccination rates affect outbreak size:**")
+        
+        comparison_rates = [0.70, 0.85, 0.92, 0.95]
+        comparison_data = []
+        
+        for rate in comparison_rates:
+            comp_susceptible = enrollment * (1 - rate)
+            comp_s_frac = comp_susceptible / enrollment if enrollment else 0
+            comp_z = 0.0001
+            for _ in range(50):
+                comp_z = 1 - np.exp(-R0 * comp_z * comp_s_frac)
+            comp_attack = min(comp_z, 1.0)
+            comp_cases = comp_attack * comp_susceptible
+            comparison_data.append({
+                'Vaccination Rate': f"{rate*100:.0f}%",
+                'Total Cases': int(comp_cases),
+                'Hospitalizations': int(comp_cases * 0.2)
+            })
+        
+        comp_df = pd.DataFrame(comparison_data)
+        st.dataframe(comp_df, hide_index=True)
+        st.markdown("*Notice how vaccination rates above 92% dramatically reduce outbreak size!*")
 
     # --- Disclaimer ---
     st.markdown("""
