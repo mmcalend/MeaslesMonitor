@@ -437,28 +437,4 @@ def tab5_view(df_schools):
       The model excludes holidays and weekends from school day calculations. For actual outbreak response and guidance, 
       always consult the Arizona Department of Health Services (ADHS) and local public health authorities.
     </div>
-    """, unsafe_allow_html=True) please help me use my custom drop downs located in a helpers.py def custom_expander(title, content_md, open=False):
-    """
-    Custom collapsible section with transparent background.
-    """
-    open_attr = "open" if open else ""
-    html = f"""
-    <details {open_attr} style="
-        margin-bottom:1rem;
-        background-color:transparent;
-        border-radius:8px;
-        padding:0.25rem;
-        border: none;
-    ">
-      <summary style="
-          font-weight:bold;
-          cursor:pointer;
-          color:white;
-          font-size:1.05rem;
-      ">{title}</summary>
-      <div style="margin-top:0.75rem; color:white; line-height:1.5;">
-        {content_md}
-      </div>
-    </details>
-    """
-    st.markdown(html, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
