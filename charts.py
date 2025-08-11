@@ -143,3 +143,104 @@ def stacked_bar_chart(data, title, colors):
         showlegend=True
     )
     return fig
+
+
+import plotly.graph_objects as go
+import math
+
+def people_outcomes_chart(enrollment, immune_rate, infected, hosp_rate, death_rate, per_unit=None):
+    # --- Helper functions ---
+    def _bucket_size(e):
+        if per_unit:
+            return per_unit
+        if e > 2000: return 10
+        if e > 800: return 5
+        return 1
+
+    def _make_people_df(e, immune_rate, infected, hosp_rate, death_rate):
+        immune = int(round(e * immune_rate))
+        total_infected = int(round(infected))
+        deaths = int(round(total_infected * death_rate))
+        hospitalized = int(round(total_infected * hosp_rate))
+        hospitalized = min(hospitalized, total_infected)
+        deaths = min(deaths, hospitalized)
+
+        susceptible_total = e - immune
+        not_infected = max(susceptible_total - total_infected, 0)
+        infected_non_hosp = max(total_infected - hospitalized, 0)
+
+        return [
+            ("Immune (MMR-protected)", immune),
+            ("Susceptible (not infected)", not_infected),
+            ("Infected (no hospital stay)", infected_non_hosp),
+            ("Hospitalized", hospitalized - deaths),
+            ("Deaths", deaths),
+        ]
+
+    def _build_grid(counts, per_unit):
+        palette = {
+            "Immune (MMR-protected)": "#6aa84f",
+            "Susceptible (not infected)": "#c9c9c9",
+            "Infected (no hospital stay)": "#f6b26b",
+            "Hospitalized": "#e69138",
+            "Deaths": "#cc0000",
+        }
+        units = []
+        for label, n in counts:
+            units_needed = int(math.ceil(n / per_unit)) if n > 0 else 0
+            units.extend([(label, palette[label])] * units_needed)
+
+        N = len(units)
+        cols = max(10, int(round(math.sqrt(N))))
+        rows = int(math.ceil(N / cols))
+
+        xs, ys, colors, labels = [], [], [], []
+        for i, (label, color) in enumerate(units):
+            r = i // cols
+            c = i % cols
+            xs.append(c)
+            ys.append(-r)
+            colors.append(color)
+            labels.append(label)
+
+        return xs, ys, colors, labels, cols, rows
+
+    # --- Build chart ---
+    pu = _bucket_size(enrollment)
+    start_counts = _make_people_df(enrollment, immune_rate, 0, hosp_rate, death_rate)
+    final_counts = _make_people_df(enrollment, immune_rate, infected, hosp_rate, death_rate)
+
+    trace0, cols, rows = _build_grid(start_counts, pu)
+    traceF, _, _ = _build_grid(final_counts, pu)
+
+    fig = go.Figure(
+        data=[go.Scatter(x=trace0[0], y=trace0[1], mode="markers",
+                         marker=dict(symbol="square", size=12, color=trace0[2]),
+                         text=trace0[3], hovertemplate="%{text}<extra></extra>", showlegend=False)],
+        frames=[go.Frame(data=[go.Scatter(x=traceF[0], y=traceF[1], mode="markers",
+                                          marker=dict(symbol="square", size=12, color=traceF[2]),
+                                          text=traceF[3], hovertemplate="%{text}<extra></extra>", showlegend=False)],
+                         name="final")]
+    )
+
+    fig.update_layout(
+        xaxis=dict(visible=False, range=[-1, cols+1]),
+        yaxis=dict(visible=False, range=[-(rows+1), 1]),
+        plot_bgcolor="rgba(0,0,0,0)",
+        margin=dict(t=10, b=10, l=10, r=10),
+        updatemenus=[dict(
+            type="buttons",
+            x=0.0, y=1.12, xanchor="left", yanchor="top",
+            showactive=False,
+            buttons=[
+                dict(label="▶ Start Outbreak", method="animate",
+                     args=[["final"], {"frame": {"duration": 700, "redraw": True},
+                                       "fromcurrent": True, "transition": {"duration": 250}}]),
+                dict(label="↺ Reset", method="animate",
+                     args=[[None], {"frame": {"duration": 0, "redraw": True},
+                                    "mode": "immediate"}]),
+            ],
+        )],
+    )
+
+    return fig, pu
