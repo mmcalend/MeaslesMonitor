@@ -64,3 +64,14 @@ def tab2_view(df):
         Data Source: <a href='https://github.com/CSSEGISandData/measles_data' target='_blank' style='text-decoration: none;'>JHU Measles Tracking Team Data Repository at Johns Hopkins University</a>
     </div>
     """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style='font-size: 0.8rem; font-style: italic;'>
+        Note: Case counts shown here are based on the JHU Measles Tracking Team dataset, which aggregates 
+        confirmed cases from state and local reports. These counts may differ from CDC's national 
+        measles cases due to differences in reporting schedules, data aggregation methods, and 
+        classification criteria. Minor discrepancies, such as temporary dips or spikes, can occur 
+        when local data is updated or backfilled after initial reporting.
+    </div>
+    """, unsafe_allow_html=True)
+
