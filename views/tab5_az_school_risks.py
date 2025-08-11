@@ -20,11 +20,11 @@ def tab5_view(df_schools):
         st.markdown("""
         **Why is measles so contagious?**
         Measles remains airborne for up to 2 hours. Immunity and reproduction number (R₀) explain infection dynamics...
-        """)  # trimmed for brevity
+        """)
 
     with st.expander("Test Your Knowledge", expanded=False):
         st.markdown("**Quick Quiz: How well do you understand measles?**")
-        # quiz code (omitted for brevity)...
+        # quiz code here if needed
 
     st.markdown("""
     <div style='text-align:center; margin-bottom:1em;'>
@@ -59,11 +59,11 @@ def tab5_view(df_schools):
     st.markdown("---")
     with st.expander("Herd Immunity Calculator", expanded=False):
         st.markdown("**Calculate the vaccination rate needed for herd immunity:**")
-        r0_slider = st.slider("Adjust R ₀", 2, 18, 12)
+        r0_slider = st.slider("Adjust R ₀", 2, 18, 12)
         herd_immunity_threshold = (1 - 1/r0_slider) * 100
-        st.markdown(f"With R ₀ = {r0_slider}, we need **{herd_immunity_threshold:.1f}%** vaccinated.")
+        st.markdown(f"With R ₀ = {r0_slider}, we need **{herd_immunity_threshold:.1f}%** vaccinated.")
 
-    with st.expander("Real‑World Measles Outbreaks", expanded=False):
+    with st.expander("Real-World Measles Outbreaks", expanded=False):
         st.markdown("""
         **Recent Arizona Cases:** 2024 (travel-linked), 2019 (Pinal County, 9 cases), 2008 (7 cases)...
         """)
@@ -152,12 +152,12 @@ def tab5_view(df_schools):
     st.markdown("<h2 style='text-align:center;'>Outbreak Summary</h2>", unsafe_allow_html=True)
 
     summary_data = [
-        {"icon": "🦠", "title": "Total Infected", "value": f"{int(total_cases):,}", "percentage": f"({total_cases/enrollment*100:.1f}% of school)"},
-        {"icon": "🏥", "title": "Hospitalizations", "value": f"{int(total_cases*hosp_rate):,}", "percentage": f"({hosp_rate*100:.0f}% of cases)"},
-        {"icon": "💀", "title": "Deaths", "value": f"{max(1, int(total_cases*death_rate)):,}" if total_cases*death_rate >= 0.5 else "<1", "percentage": f"({death_rate*100:.2f}% of cases)"},
-        {"icon": "🏠", "title": "Quarantined Students", "value": f"{int(noninfected):,}", "percentage": f"({noninfected/enrollment*100:.1f}% of school)"},
-        {"icon": "📅", "title": "Total Missed Days", "value": f"{int(total_days_missed):,}", "percentage": f"({total_days_missed/(enrollment*180)*100:.1f}% of school‑year)"},
-        {"icon": "📈", "title": "Attack Rate", "value": f"{attack*100:.1f}%", "percentage": "of susceptible students"}
+        {"title": "Total Infected", "value": f"{int(total_cases):,}", "percentage": f"({total_cases/enrollment*100:.1f}% of school)"},
+        {"title": "Hospitalizations", "value": f"{int(total_cases*hosp_rate):,}", "percentage": f"({hosp_rate*100:.0f}% of cases)"},
+        {"title": "Deaths", "value": f"{max(1, int(total_cases*death_rate)):,}" if total_cases*death_rate >= 0.5 else "<1", "percentage": f"({death_rate*100:.2f}% of cases)"},
+        {"title": "Quarantined Students", "value": f"{int(noninfected):,}", "percentage": f"({noninfected/enrollment*100:.1f}% of school)"},
+        {"title": "Total Missed Days", "value": f"{int(total_days_missed):,}", "percentage": f"({total_days_missed/(enrollment*180)*100:.1f}% of school-year)"},
+        {"title": "Attack Rate", "value": f"{attack*100:.1f}%", "percentage": "of susceptible students"}
     ]
 
     cols1, cols2 = st.columns(3), st.columns(3)
@@ -167,7 +167,6 @@ def tab5_view(df_schools):
         with all_cols[i]:
             st.markdown(f"""
             <div style='background:{color}; color:white; padding:1rem; border-radius:8px; text-align:center; margin-bottom:0.5rem;'>
-              <div style='font-size:1.5em; margin-bottom:0.5em;'>{item["icon"]}</div>
               <strong>{item["title"]}</strong><br>
               <span style='font-size:1.2em;'>{item["value"]}</span><br>
               <small>{item["percentage"]}</small>
@@ -183,8 +182,6 @@ def tab5_view(df_schools):
         st.markdown(f"**Estimated Costs:**\n- Hospital: ${total_hosp_cost:,}\n- Parent lost wages: ${int(parent_cost):,}\n- Total: ${total_estimated:,}")
 
     st.markdown("<h2 style='text-align:center;'>School Calendar: Exclusion Timeline</h2>", unsafe_allow_html=True)
-
-    # Calendar generation (unchanged for brevity)...
 
     st.info(f"Infected excluded for 4 days; Unvaccinated exposed for 21 days; Total excluded: {int(total_cases + noninfected)}.")
 
