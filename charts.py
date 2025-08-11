@@ -259,3 +259,4 @@ def epi_curve_chart(daily_counts, y_max: int = 100) -> go.Figure:
         )],
     )
     return fig
+
