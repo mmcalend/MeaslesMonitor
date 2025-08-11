@@ -1,6 +1,9 @@
 import plotly.graph_objects as go
 import math
 import plotly.express as px
+import numpy as np
+import plotly.graph_objects as go
+
 
 def proportional_pictogram_bar(data, title, total_cases=None, icon_size=16, icons_per_row=10, colors=None, show_counts_for=None):
     total_icons = 100
@@ -145,18 +148,21 @@ def stacked_bar_chart(data, title, colors):
     )
     return fig
 
-# charts.py
-import math
-import plotly.graph_objects as go
-import plotly.express as px
 
-def people_outcomes_chart(enrollment, immune_rate, infected, hosp_rate, death_rate, per_unit=None, style="square"):
+def people_outcomes_chart(
+    enrollment,
+    immune_rate,
+    infected,
+    hosp_rate,
+    death_rate,
+    per_unit=None,
+    style="heads",                
+):
     """
     Returns (fig, per_unit).
-    style: "square" (default), "emoji", or "vector" (stick figures).
+    style options: "heads" (circles), "square" (waffle), or "emoji" (🧍).
     """
 
-    # --- Helper functions ---
     def _bucket_size(e):
         if per_unit:
             return per_unit
@@ -185,7 +191,6 @@ def people_outcomes_chart(enrollment, immune_rate, infected, hosp_rate, death_ra
         ]
 
     def _grid(counts, per_unit):
-        """Return per-person unit grid as (xs, ys, colors, labels, cols, rows)."""
         units = []
         for label, n, color in counts:
             k = int(math.ceil(n / per_unit)) if n > 0 else 0
@@ -200,12 +205,12 @@ def people_outcomes_chart(enrollment, immune_rate, infected, hosp_rate, death_ra
             r = i // cols
             c = i % cols
             xs.append(c)
-            ys.append(-r)  # stack downward
+            ys.append(-r)  
             colors.append(color)
             labels.append(label)
         return xs, ys, colors, labels, cols, rows
 
-    def _legend_proxies(fig):
+    def _legend(fig):
         for name, color in [
             ("Immune (MMR-protected)", "#6aa84f"),
             ("Susceptible (not infected)", "#c9c9c9"),
@@ -215,11 +220,11 @@ def people_outcomes_chart(enrollment, immune_rate, infected, hosp_rate, death_ra
         ]:
             fig.add_trace(go.Scatter(
                 x=[None], y=[None], mode="markers",
-                marker=dict(symbol="square", size=10, color=color),
+                marker=dict(symbol="circle", size=10, color=color),
                 name=name, showlegend=True
             ))
 
-    # --- Build initial/final states ---
+    # Build data
     pu = _bucket_size(enrollment)
     start_counts = _counts(enrollment, immune_rate, 0, hosp_rate, death_rate)
     final_counts = _counts(enrollment, immune_rate, infected, hosp_rate, death_rate)
@@ -227,7 +232,6 @@ def people_outcomes_chart(enrollment, immune_rate, infected, hosp_rate, death_ra
     xs0, ys0, c0, labels0, cols, rows = _grid(start_counts, pu)
     xsF, ysF, cF, labelsF, _, _        = _grid(final_counts, pu)
 
-    # Group points by category for consistent coloring/performance
     def _group(xs, ys, cols, labels):
         by = {}
         for x, y, col, lab in zip(xs, ys, cols, labels):
@@ -245,92 +249,48 @@ def people_outcomes_chart(enrollment, immune_rate, infected, hosp_rate, death_ra
         "Deaths",
     ]
 
-    # ---- STYLE 1: square markers ----
+   
+    def traces_for(grouped, use_mode, marker_kwargs, text_list=None):
+        traces = []
+        for cat in categories:
+            pts = grouped.get(cat, {"x": [], "y": [], "color": "#000"})
+            base = dict(
+                x=pts["x"], y=pts["y"],
+                hovertemplate=f"{cat}<extra></extra>",
+                showlegend=False
+            )
+            if use_mode == "markers":
+                base["mode"] = "markers"
+                base["marker"] = dict(color=pts["color"], **marker_kwargs)
+                traces.append(go.Scatter(**base))
+            else:  # text
+                base["mode"] = "text"
+                base["text"] = text_list or []
+                base["textfont"] = dict(size=16, color=pts["color"])
+                traces.append(go.Scatter(**base))
+        return traces
+
     if style == "square":
-        data_init = []
-        for cat in categories:
-            pts = g0.get(cat, {"x": [], "y": [], "color": "#000"})
-            data_init.append(go.Scatter(
-                x=pts["x"], y=pts["y"], mode="markers",
-                marker=dict(symbol="square", size=12, color=pts["color"], line=dict(width=0)),
-                hovertemplate=f"{cat}<extra></extra>", showlegend=False
-            ))
-        data_final = []
-        for cat in categories:
-            pts = gF.get(cat, {"x": [], "y": [], "color": "#000"})
-            data_final.append(go.Scatter(
-                x=pts["x"], y=pts["y"], mode="markers",
-                marker=dict(symbol="square", size=12, color=pts["color"], line=dict(width=0)),
-                hovertemplate=f"{cat}<extra></extra>", showlegend=False
-            ))
-
-    # ---- STYLE 2: emoji stick figure ----
+        data0 = traces_for(g0, "markers", dict(symbol="square", size=12, line=dict(width=0)))
+        dataF = traces_for(gF, "markers", dict(symbol="square", size=12, line=dict(width=0)))
     elif style == "emoji":
-        data_init = []
-        for cat in categories:
-            pts = g0.get(cat, {"x": [], "y": [], "color": "#000"})
-            data_init.append(go.Scatter(
-                x=pts["x"], y=pts["y"], mode="text",
-                text=["🧍"] * len(pts["x"]),
-                textfont=dict(size=16, color=pts["color"]),
-                hovertemplate=f"{cat}<extra></extra>", showlegend=False
-            ))
-        data_final = []
-        for cat in categories:
-            pts = gF.get(cat, {"x": [], "y": [], "color": "#000"})
-            data_final.append(go.Scatter(
-                x=pts["x"], y=pts["y"], mode="text",
-                text=["🧍"] * len(pts["x"]),
-                textfont=dict(size=16, color=pts["color"]),
-                hovertemplate=f"{cat}<extra></extra>", showlegend=False
-            ))
+        data0 = traces_for(g0, "text", {}, text_list=["🧍"])
+        dataF = traces_for(gF, "text", {}, text_list=["🧍"])
+    else:  # "heads" — circles only
+        data0 = traces_for(g0, "markers", dict(symbol="circle", size=10, line=dict(width=0)))
+        dataF = traces_for(gF, "markers", dict(symbol="circle", size=10, line=dict(width=0)))
 
-    # ---- STYLE 3: vector stick figure (head + body/arms/legs) ----
-    else:  # style == "vector"
-        def build_vector_traces(grouped):
-            """Return two traces per category: heads (markers) and lines (body/arms/legs)."""
-            traces = []
-            for cat in categories:
-                pts = grouped.get(cat, {"x": [], "y": [], "color": "#000"})
-                xs, ys, col = pts["x"], pts["y"], pts["color"]
-                # heads
-                traces.append(go.Scatter(
-                    x=xs, y=ys, mode="markers",
-                    marker=dict(symbol="circle", size=8, color=col),
-                    hovertemplate=f"{cat}<extra></extra>", showlegend=False
-                ))
-                # vector lines: build combined polyline with None separators for body+arms+legs
-                lx, ly = [], []
-                for x, y in zip(xs, ys):
-                    # Body: from y-0.25 down to y-0.9
-                    lx += [x, x, None]
-                    ly += [y - 0.25, y - 0.9, None]
-                    # Arms: horizontal at y-0.55
-                    lx += [x - 0.3, x + 0.3, None]
-                    ly += [y - 0.55, y - 0.55, None]
-                    # Legs: from hip (y-0.9) to two feet
-                    lx += [x, x - 0.25, None, x, x + 0.25, None]
-                    ly += [y - 0.9, y - 1.5, None, y - 0.9, y - 1.5, None]
-                traces.append(go.Scatter(
-                    x=lx, y=ly, mode="lines",
-                    line=dict(width=2, color=col),
-                    hoverinfo="skip", showlegend=False
-                ))
-            return traces
+    fig = go.Figure(data=data0, frames=[go.Frame(data=dataF, name="final")])
+    _legend(fig)
 
-        data_init = build_vector_traces(g0)
-        data_final = build_vector_traces(gF)
-
-    # Build figure with consistent trace count/order for animation
-    fig = go.Figure(data=data_init, frames=[go.Frame(data=data_final, name="final")])
-    _legend_proxies(fig)
 
     fig.update_layout(
-        xaxis=dict(visible=False, range=[-1, cols + 1]),
-        yaxis=dict(visible=False, range=[-(rows + 1), 1]),
+        xaxis=dict(visible=False, range=[-1, cols+1]),
+        yaxis=dict(visible=False, range=[-(rows+1), 1]),
         plot_bgcolor="rgba(0,0,0,0)",
         margin=dict(t=10, b=10, l=10, r=10),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+        shapes=shapes,
         updatemenus=[dict(
             type="buttons",
             x=0.0, y=1.15, xanchor="left", yanchor="top",
@@ -346,3 +306,47 @@ def people_outcomes_chart(enrollment, immune_rate, infected, hosp_rate, death_ra
         )],
     )
     return fig, pu
+
+
+def epi_curve_chart(daily_counts, y_max=100):
+    """
+    Build an epi curve line+bar with a Start Outbreak button (no slider).
+    y_max keeps the Y-axis consistent across schools.
+    """
+    days = np.arange(len(daily_counts))
+    y = np.asarray(daily_counts, dtype=float)
+
+    line0 = go.Scatter(x=days, y=[0]*len(days), mode="lines",
+                       line=dict(width=3), name="Daily cases")
+    bar0  = go.Bar(x=days, y=[0]*len(days), name="")
+
+    lineF = go.Scatter(x=days, y=y, mode="lines",
+                       line=dict(width=3), name="Daily cases")
+    barF  = go.Bar(x=days, y=y, name="", marker=dict(opacity=0.35))
+
+    fig = go.Figure(
+        data=[bar0, line0],
+        frames=[go.Frame(data=[barF, lineF], name="final")]
+    )
+    fig.update_layout(
+        xaxis=dict(title="Days since introduction", showgrid=False),
+        yaxis=dict(title="Daily new cases (students)", showgrid=False, range=[0, y_max]),
+        barmode="overlay",
+        plot_bgcolor="rgba(0,0,0,0)",
+        margin=dict(t=10, b=10, l=10, r=10),
+        showlegend=False,
+        updatemenus=[dict(
+            type="buttons",
+            x=0.0, y=1.15, xanchor="left", yanchor="top",
+            showactive=False,
+            buttons=[
+                dict(label="▶ Start Outbreak", method="animate",
+                     args=[["final"], {"frame": {"duration": 800, "redraw": True},
+                                       "fromcurrent": True, "transition": {"duration": 250}}]),
+                dict(label="↺ Reset", method="animate",
+                     args=[[None], {"frame": {"duration": 0, "redraw": True},
+                                    "mode": "immediate"}]),
+            ],
+        )],
+    )
+    return fig
