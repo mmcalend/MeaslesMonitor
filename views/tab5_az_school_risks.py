@@ -1,281 +1,243 @@
-# views/tab5_az_school_risks.py
+## views/tab5_az_school_risks.py
+"""
+Arizona School Risks — simplified, plain-language Tab 5
 
-import math
-import numpy as np
-import pandas as pd
-import plotly.express as px
-import streamlit as st
+Flow:
+  1) Choose scenario
+  2) Results at a glance
+  3) Visualize (People view or Epi curve)
+  4) Calendar
+  5) Assumptions & notes
+
+Kept your color/font scheme, calendar, and avoided emojis.
+"""
 from datetime import datetime, timedelta
 
-# charts.py must provide these:
-#   - people_outcomes_chart(enrollment, immune_rate, infected, hosp_rate, death_rate, per_unit=None, style="heads", show_background=True) -> (fig, per_unit)
-#   - epi_curve_chart(daily_counts, y_max=100) -> fig
+import numpy as np
+import pandas as pd
+import streamlit as st
+
 from charts import people_outcomes_chart, epi_curve_chart
 
-
-# -------- Tunables (easy to tweak) --------
+# -------- Tunables --------
 R0_DEFAULT       = 12
 HOSP_RATE        = 0.20
 DEATH_RATE       = 0.0003
 QUARANTINE_DAYS  = 21
 ISOLATION_DAYS   = 4
-SIM_DAYS         = 90      # for the epi-curve distribution
-EPI_Y_MAX        = 100     # fixed y-axis cap for comparability
+SIM_DAYS         = 90
+EPI_Y_MAX        = 100
 
 
-def _assumptions_plain_language():
-    st.markdown("""
-**Plain-language overview of assumptions**
-- **How contagious (R₀):** If one student gets measles, they could infect about **12** others in a fully susceptible group.
-- **MMR coverage:** The share of students already protected. Lower coverage → more students at risk.
-- **Hospitalizations:** We assume **20%** of infections need hospital care.
-- **Deaths:** Very rare but not zero — we use **0.03%** of infections.
-- **Isolation:** A student with measles stays home **4 days after rash** starts.
-- **Quarantine:** Un/under-vaccinated exposed students stay home **21 days** after last exposure.
-- **Outbreak pattern (simplified):** Cases grow, peak, and fall as fewer susceptible students remain.
-""")
+# ----------------- Small helpers -----------------
+def _final_size_attack_rate(r0: float, susceptible_share: float, iters: int = 60) -> float:
+    """Approximate final attack rate using fixed-point iteration of the SIR final-size relation.
+    Returns a fraction between 0 and 1 over susceptibles."""
+    if susceptible_share <= 0 or r0 <= 0:
+        return 0.0
+    z = 1e-4
+    for _ in range(iters):
+        z = 1 - np.exp(-r0 * z * susceptible_share)
+    return float(max(0.0, min(1.0, z)))
 
 
-def tab5_view(df_schools: pd.DataFrame):
-    # ---------- Header & callouts ----------
-    st.markdown("""
-    <div style='text-align:center; margin-bottom:1.5em;'>
-      <h1 style='margin-bottom:0.2em;'>Arizona Measles Outbreak Simulator</h1>
-      <p style='font-size:1.05rem; margin-top:0; margin-bottom:0.5em;'>
-        Education-focused tool to estimate potential infections, hospitalizations, and missed school days
-        based on enrollment and MMR coverage.
-        <br><em>Note: Schools with fewer than 20 kindergarten students are excluded from the list.</em>
-      </p>
-      <h2 style='text-align:center; margin:0.75em 0 0.5em;'>Assumptions & Data Sources</h2>
-    </div>
-    """, unsafe_allow_html=True)
+def _build_school_days(n_days: int = 30):
+    """Return next n school *weekdays* (Mon–Fri) starting today."""
+    days, curr = [], datetime.today().date()
+    while len(days) < n_days:
+        if curr.weekday() < 5:
+            days.append(curr)
+        curr += timedelta(days=1)
+    return days
 
-    st.markdown("""
-    <div style='display:flex; flex-wrap:wrap; justify-content:center; gap:1rem; margin-bottom:2em;'>
-      <div tabindex="0" title='PubMed: R₀ ≈ 12 (PMID: 28757186)' style='background:#2f2e41; color:white; padding:1rem; border-radius:10px; width:220px; cursor:help;'>
-        <strong>R₀ (contagiousness)</strong><br>≈ 12 <a href="https://pubmed.ncbi.nlm.nih.gov/28757186/" target="_blank" style="color:#a5c9ff;">PubMed</a>
-      </div>
-      <div tabindex="0" title='ADHS: 2024–25 MMR kindergarten coverage (schools ≥20 K students)' style='background:#3d3c5a; color:white; padding:1rem; border-radius:10px; width:220px; cursor:help;'>
-        <strong>MMR coverage data</strong><br>ADHS 2024–25 <a href="https://www.azdhs.gov/preparedness/epidemiology-disease-control/immunization/#reports-immunization-coverage" target="_blank" style="color:#a5c9ff;">ADHS</a>
-      </div>
-      <div tabindex="0" title='NFID: Hospitalization rate ≈ 20%' style='background:#47465c; color:white; padding:1rem; border-radius:10px; width:220px; cursor:help;'>
-        <strong>Hospitalization rate</strong><br>20% <a href="https://www.nfid.org/infectious-disease/measles/" target="_blank" style="color:#a5c9ff;">NFID</a>
-      </div>
-      <div tabindex="0" title='UChicago Medicine: Death rate ≈ 0.03%' style='background:#4e4d6b; color:white; padding:1rem; border-radius:10px; width:220px; cursor:help;'>
-        <strong>Death rate</strong><br>0.03% <a href="https://www.uchicagomedicine.org/forefront/pediatrics-articles/measles-is-still-a-very-dangerous-disease" target="_blank" style="color:#a5c9ff;">UChicago</a>
-      </div>
-      <div tabindex="0" title='Isolation = 4 days post-rash (AAC R9-6-355)' style='background:#5A4E7A; color:white; padding:1rem; border-radius:10px; width:220px; cursor:help;'>
-        <strong>Isolation</strong><br>4 days
-      </div>
-      <div tabindex="0" title='Quarantine = 21 days after last exposure (ADHS)' style='background:#6d6b85; color:white; padding:1rem; border-radius:10px; width:220px; cursor:help;'>
-        <strong>Quarantine</strong><br>21 days
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
 
-    with st.expander("What do these assumptions mean? (plain language)", expanded=False):
-        _assumptions_plain_language()
-
-    # ---------- Inputs ----------
-    st.markdown("---")
-    st.markdown("<h2 style='text-align:center; margin:0.75em 0 0.5em;'>Choose Simulation Mode</h2>", unsafe_allow_html=True)
-
-    mode = st.radio(
-        "Simulation mode",
-        ["Select a School", "Enter Custom Values"],
-        horizontal=True,
-        label_visibility="collapsed",  # accessibility-safe: label exists but hidden
+def _calendar_html(school_days, exclusion_days: set):
+    # We keep the calendar HTML to preserve your look.
+    header = ''.join(
+        f"<th style='padding:6px;border-bottom:1px solid #eee'>{wd}</th>"
+        for wd in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
     )
+    html = [
+        "<div style='max-width:680px;margin:auto;'>",
+        "<table style='width:100%;text-align:center;border-collapse:collapse;'>",
+        f"<tr>{header}</tr>",
+    ]
+    i = 0
+    while i < len(school_days):
+        week = ["<tr>"]
+        wd0 = school_days[i].weekday()
+        week.extend("<td style='padding:12px;border:1px solid #eee;background:#f7f7f7'></td>" for _ in range(wd0))
+        for _wd in range(wd0, 5):
+            if i >= len(school_days):
+                week.append("<td></td>")
+                continue
+            d = school_days[i]
+            shaded = d in exclusion_days
+            bg = "#6A4C93" if shaded else "#f7f7f7"
+            fg = "white" if shaded else "#333"
+            week.append(
+                f"<td style='padding:12px;border:1px solid #eee;background:{bg};"
+                f"color:{fg};border-radius:4px'>{d.strftime('%b %d')}</td>"
+            )
+            i += 1
+        week.append("</tr>")
+        html.append(''.join(week))
+    html.append("</table></div>")
+    return ''.join(html)
+
+
+def render(df_schools: pd.DataFrame):
+    # -------- Title --------
+    st.markdown(
+        """
+        <div style='text-align:center'>
+          <h1 style='margin-bottom:0.5rem'>Arizona School Risks</h1>
+          <p style='margin:0'>Estimate infections, hospitalizations, and missed school days based on enrollment and MMR coverage.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # -------- Scenario selection --------
+    st.markdown("---")
+    c1, c2 = st.columns([1, 1])
+    with c1:
+        mode = st.radio("Simulation mode", ["Select a School", "Enter Custom Values"], horizontal=True)
+    with c2:
+        R0 = st.slider(
+            "How contagious is measles (R₀)?", 5, 20, R0_DEFAULT,
+            help="Higher means each infected student infects more people if others are susceptible."
+        )
 
     if mode == "Select a School":
-        sel = st.selectbox("School", df_schools["SCHOOL NAME"].sort_values(), index=0)
-        row = df_schools[df_schools["SCHOOL NAME"] == sel].iloc[0]
-        enrollment = int(row["ENROLLED"])
-        immune = float(row["IMMUNE_MMR"])
-        st.caption("Using school-reported kindergarten enrollment and MMR coverage for this simulation.")
+        sel = st.selectbox(
+            "School",
+            df_schools["SCHOOL NAME"].sort_values(),
+            index=0,
+            help="Pick a school to auto-fill enrollment and MMR coverage.",
+        )
+        row = df_schools.loc[df_schools["SCHOOL NAME"] == sel].iloc[0]
+        enrollment = int(row.get("ENROLLED", 0) or 0)
+        immune = float(row.get("IMMUNE_MMR", 0) or 0)
     else:
-        enrollment = st.number_input("Total Students", min_value=1, max_value=5000, value=500, step=10)
-        immune = st.slider("MMR Immunization Rate", min_value=0.0, max_value=1.0, value=0.85, step=0.01)
-        st.caption("Tip: try lower/higher MMR coverage to see how the outbreak changes.")
+        colA, colB = st.columns(2)
+        with colA:
+            enrollment = st.number_input(
+                "Total Students", min_value=1, max_value=5000, value=500, step=10,
+                help="How many students are in the school?",
+            )
+        with colB:
+            immune = st.slider(
+                "MMR Immunization Rate", min_value=0.0, max_value=1.0, value=0.85, step=0.01,
+                help="Share of students already protected by MMR (0.00 to 1.00).",
+            )
 
-    susceptible = enrollment * (1 - immune)
+    susceptible = max(0, enrollment * (1 - immune))
 
-    st.markdown(f"""
-    <div style='text-align:center; margin-bottom:1em;'>
-      <h2 style='margin-bottom:0.3em;'>School Details</h2>
-      <div style='display:flex; flex-wrap:wrap; justify-content:center; gap:1rem;'>
-        <div title='Total students' style='background:#393855; color:white; padding:0.8rem; border-radius:8px; width:200px;'>
-          <strong>Total Students Enrolled:</strong><br>{enrollment:,}
-        </div>
-        <div title='Share protected by MMR' style='background:#4b4971; color:white; padding:0.8rem; border-radius:8px; width:200px;'>
-          <strong>MMR Coverage:</strong><br>{immune*100:.1f}%
-        </div>
-        <div title='Could still get measles' style='background:#5a5977; color:white; padding:0.8rem; border-radius:8px; width:200px;'>
-          <strong>Susceptible Students:</strong><br>{int(susceptible):,}
-        </div>
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # ---------- Core outbreak math (simple “final size” iteration) ----------
-    R0 = R0_DEFAULT
-    st.number_input("Initial Infected Students", min_value=1, max_value=200, value=1, step=1, key="init_cases")
-
-    s_frac = susceptible / enrollment if enrollment else 0
-    z = 0.0001
-    for _ in range(60):
-        z = 1 - np.exp(-R0 * z * s_frac)
-    attack = float(min(max(z, 0.0), 1.0))
-    total_cases = attack * susceptible
-
-    hosp_rate, death_rate = HOSP_RATE, DEATH_RATE
-    q_days, isolation_days = QUARANTINE_DAYS, ISOLATION_DAYS
-
-    total_infected = total_cases
-    hospitalized  = total_infected * hosp_rate
-    deaths        = total_infected * death_rate
-
-    total_exposed = susceptible
-    not_infected  = max(total_exposed - total_infected, 0)
-
-    isolate_missed     = total_infected * isolation_days
-    quarantine_missed  = not_infected   * q_days
-    total_days_missed  = isolate_missed + quarantine_missed
-
-    # ---------- Visualization toggle ----------
-    view_mode = st.radio(
-        "Visualization",
-        ["People view", "Epi curve"],
-        horizontal=True,
-        label_visibility="collapsed"
+    # --- What if we raise MMR coverage? ---
+    st.markdown("---")
+    st.markdown("### What if we raise MMR?")
+    inc = st.slider(
+        "Increase coverage by (percentage points)", 0, 20, 5, 1,
+        help="Try 0–20 points. For example, if current MMR is 80% and you add 5 points, it becomes 85%.",
     )
+    immune_plus = min(1.0, immune + inc / 100.0)
+    susceptible_plus = enrollment * (1 - immune_plus)
 
-    if view_mode == "People view":
+    # -------- Core math --------
+    s_share = susceptible / enrollment if enrollment else 0.0
+    attack_over_sus = _final_size_attack_rate(R0, s_share)
+    total_infected = attack_over_sus * susceptible
+    hospitalized = total_infected * HOSP_RATE
+    deaths = total_infected * DEATH_RATE
+    exposed_not_inf = max(susceptible - total_infected, 0)
+    missed_days = total_infected * ISOLATION_DAYS + exposed_not_inf * QUARANTINE_DAYS
+
+    # -------- Results at a glance --------
+    st.markdown("## Results at a glance")
+    m1, m2, m3, m4, m5 = st.columns(5)
+    m1.metric("Total infected", f"{int(round(total_infected)):,}")
+    m2.metric("Hospitalizations (assumed 20%)", f"{int(round(hospitalized)):,}")
+    m3.metric("Deaths (assumed 0.03%)", f"{int(round(deaths)):,}")
+    m4.metric("Exposed not infected", f"{int(round(exposed_not_inf)):,}")
+    m5.metric("Missed school days", f"{int(round(missed_days)):,}")
+    st.caption("‘Assumed’ rates are educational placeholders and can change by context. See ‘Assumptions & notes’ below.")
+
+    # --- What-if metrics (with increased MMR) ---
+    attack_over_sus_plus = _final_size_attack_rate(R0, (susceptible_plus / enrollment) if enrollment else 0.0)
+    total_infected_plus = attack_over_sus_plus * susceptible_plus
+    hospitalized_plus = total_infected_plus * HOSP_RATE
+    deaths_plus = total_infected_plus * DEATH_RATE
+    exposed_not_inf_plus = max(susceptible_plus - total_infected_plus, 0)
+    missed_days_plus = total_infected_plus * ISOLATION_DAYS + exposed_not_inf_plus * QUARANTINE_DAYS
+
+    st.markdown(f"#### If MMR increases by **{inc}** points")
+    c1, c2, c3, c4, c5 = st.columns(5)
+    c1.metric("Total infected", f"{int(round(total_infected_plus)):,}",
+              delta=int(round(total_infected_plus - total_infected)), delta_color="inverse")
+    c2.metric("Hospitalizations", f"{int(round(hospitalized_plus)):,}",
+              delta=int(round(hospitalized_plus - hospitalized)), delta_color="inverse")
+    c3.metric("Deaths", f"{int(round(deaths_plus)):,}",
+              delta=int(round(deaths_plus - deaths)), delta_color="inverse")
+    c4.metric("Exposed not infected", f"{int(round(exposed_not_inf_plus)):,}",
+              delta=int(round(exposed_not_inf_plus - exposed_not_inf)))
+    c5.metric("Missed school days", f"{int(round(missed_days_plus)):,}",
+              delta=int(round(missed_days_plus - missed_days)), delta_color="inverse")
+    st.caption("Green deltas = fewer infections or days missed after raising MMR.")
+
+    # -------- Visualize the outbreak --------
+    st.markdown("---")
+    st.markdown("## Visualize the outbreak")
+
+    view = st.radio("View", ["People view", "Epi curve"], horizontal=True, label_visibility="collapsed")
+    if view == "People view":
         fig_people, per_unit = people_outcomes_chart(
             enrollment=enrollment,
             immune_rate=immune,
             infected=total_infected,
-            hosp_rate=hosp_rate,
-            death_rate=death_rate,
-            style="heads",          
-            show_background=False   
+            hosp_rate=HOSP_RATE,
+            death_rate=DEATH_RATE,
+            per_unit=None,
+            style="heads",            # circles only
+            show_background=True,
         )
-        st.plotly_chart(fig_people, use_container_width=True, config={"responsive": True})
-
-        st.markdown("<h2 style='text-align:center; margin:0.75em 0 0.5em;'>What this means in people</h2>", unsafe_allow_html=True)
-        st.markdown(f"""
-        <div class="blocked-text">
-          Each circle represents <strong>{per_unit}</strong> student{'s' if per_unit>1 else ''}. Colors show:
-          <span style="color:#6aa84f;">Immune</span>,
-          <span style="color:#c9c9c9;">Susceptible (not infected)</span>,
-          <span style="color:#f6b26b;">Infected (no hospital stay)</span>,
-          <span style="color:#e69138;">Hospitalized</span>,
-          <span style="color:#cc0000;">Deaths</span>.
-          Press <strong>Start Outbreak</strong> to reveal the estimated outcomes for this scenario.
-        </div>
-        """, unsafe_allow_html=True)
-
+        st.plotly_chart(fig_people, use_container_width=True)
+        st.caption("Each circle represents a fixed number of students so you can compare groups fairly across schools.")
     else:
-        # Smooth 90-day epi curve (gamma-like) scaled to total infections; fixed y-axis for comparability
-        days = np.arange(SIM_DAYS)
-        shape = (days**5) * np.exp(-days / 2)
-        shape = shape / shape.sum() if shape.sum() else shape
-        daily_counts = shape * total_infected
+        # Make a simple 90-day bell-shaped incidence curve scaled to total infections
+        x = np.arange(1, SIM_DAYS + 1)
+        k = 10.0
+        theta = SIM_DAYS / (k * 2.5)
+        y = (x ** (k - 1) * np.exp(-x / theta))
+        y = y / y.sum() * (total_infected or 0)
+        fig_curve = epi_curve_chart(daily_counts=y, y_max=EPI_Y_MAX)
+        st.plotly_chart(fig_curve, use_container_width=True)
+        with st.expander("What am I looking at?", expanded=False):
+            st.markdown("This is a simple projection of *new* measles cases per day over time. We cap the y-axis so it’s easy to compare across schools.")
 
-        fig_curve = epi_curve_chart(daily_counts=daily_counts, y_max=EPI_Y_MAX)
-        st.plotly_chart(fig_curve, use_container_width=True, config={"responsive": True})
-
-        st.markdown("<h2 style='text-align:center; margin:0.75em 0 0.5em;'>Estimated Daily Measles Cases</h2>", unsafe_allow_html=True)
-        st.markdown(f"""
-        <div class="blocked-text">
-          This curve shows a simple projection of new measles cases per day over 90 days after the virus enters the school.
-          We cap the y-axis at <strong>{EPI_Y_MAX}</strong> so comparisons across schools are easier.
-          Press <strong>Start Outbreak</strong> to animate the build-up and decline of the outbreak.
-        </div>
-        """, unsafe_allow_html=True)
-
-    # ---------- School Calendar: Exclusion (Quarantine) Days ----------
-    school_days, curr = [], datetime.today().date()
-    while len(school_days) < 30:
-        if curr.weekday() < 5:  # Mon–Fri only
-            school_days.append(curr)
-        curr += timedelta(days=1)
-    exclusion_days = set(school_days[:q_days])
-
-    cal_html = "<div style='max-width:680px; margin:auto;'><table style='width:100%; text-align:center; border-collapse:collapse;'><tr>"
-    cal_html += ''.join(f"<th style='padding:6px;border-bottom:1px solid#ccc'>{wd}</th>" for wd in ['Mon','Tue','Wed','Thu','Fri']) + '</tr>'
-    i = 0
-    while i < len(school_days):
-        week = '<tr>'
-        wd0 = school_days[i].weekday()
-        week += ''.join("<td style='padding:12px;border:1px solid #eee;background:#f7f7f7'></td>" for _ in range(wd0))
-        for _wd in range(wd0, 5):
-            if i >= len(school_days):
-                week += "<td style='padding:12px;border:1px solid #eee;background:#f7f7f7'></td>"
-            else:
-                d = school_days[i]
-                shaded = d in exclusion_days
-                style = 'background:#2f2e41; color:white;' if shaded else 'background:#ffffff;'
-                title = f"Quarantine Day {i+1}" if shaded else ''
-                week += f"<td title='{title}' style='padding:12px;border:1px solid #eee; {style}'>{d.strftime('%b %d')}</td>"
-                i += 1
-        week += '</tr>'
-        cal_html += week
-    cal_html += '</table></div>'
-    st.markdown(cal_html, unsafe_allow_html=True)
-
-    st.markdown("<h2 style='text-align:center; margin:0.75em 0 0.5em;'>School Calendar: Exclusion (Quarantine) Days</h2>", unsafe_allow_html=True)
-    st.markdown(f"""
-    <div class="blocked-text">
-      <strong>What the calendar shows:</strong> Confirmed measles cases stay home for <strong>{ISOLATION_DAYS} days after rash</strong>.
-      Unvaccinated or not fully vaccinated exposed students are excluded for <strong>{QUARANTINE_DAYS} days</strong> after last exposure.
-      Shaded dates mark the next 30 school weekdays that could be affected if an outbreak began now.
-    </div>
-    """, unsafe_allow_html=True)
-
-    # ---------- Outbreak Summary ----------
+    # -------- Calendar of exclusions --------
     st.markdown("---")
-    st.markdown("<h2 style='text-align:center; margin:0.75em 0 0.5em;'>Outbreak Summary</h2>", unsafe_allow_html=True)
-    colors = px.colors.sequential.Cividis
-    st.markdown(f"""
-    <div style='display:flex; flex-wrap:wrap; justify-content:center; gap:1rem; margin-bottom:1em;'>
-      <div title='Total infections among susceptible students' style='background:{colors[-3]}; color:white; padding:1rem; border-radius:8px; width:190px;'>
-        <strong>Total Infected</strong><br>{int(total_infected):,}
-      </div>
-      <div title='Hospitalizations = infections × {HOSP_RATE:.0%}' style='background:{colors[-4]}; color:white; padding:1rem; border-radius:8px; width:190px;'>
-        <strong>Hospitalizations</strong><br>{int(hospitalized):,}
-      </div>
-      <div title='Deaths = infections × {DEATH_RATE:.3%}' style='background:{colors[-5]}; color:white; padding:1rem; border-radius:8px; width:190px;'>
-        <strong>Deaths</strong><br>{int(deaths):,}
-      </div>
-      <div title='Exposed but not infected' style='background:{colors[-6]}; color:white; padding:1rem; border-radius:8px; width:190px;'>
-        <strong>Exposed Students</strong><br>{int(not_infected):,}
-      </div>
-      <div title='Missed days = cases×{ISOLATION_DAYS} + exposed×{QUARANTINE_DAYS}' style='background:{colors[-7]}; color:white; padding:1rem; border-radius:8px; width:190px;'>
-        <strong>Missed Days</strong><br>{int(total_days_missed):,}
-      </div>
-      <div title='Attack rate among susceptibles' style='background:{colors[-8]}; color:white; padding:1rem; border-radius:8px; width:190px;'>
-        <strong>Attack Rate</strong><br>{attack*100:.1f}%
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("## Calendar: exclusion (quarantine) days")
+    school_days = _build_school_days(30)
+    exclusion_days = set(school_days[:QUARANTINE_DAYS])
+    st.markdown(_calendar_html(school_days, exclusion_days), unsafe_allow_html=True)
+    st.caption("Shaded dates mark upcoming school weekdays where exposed students may need to stay home if an exposure happened today.")
 
-    # ---------- Plain-language notes (educational) ----------
-    st.markdown("""
-**Plain-language notes (education)**
-- **Total Infected:** Estimated number of susceptible students who catch measles.
-- **Hospitalizations:** About **1 in 5** infections need hospital care (model assumption).
-- **Deaths:** Very rare, but possible — we use **0.03%** of infections.
-- **Exposed Students:** Had contact but didn’t get sick; they still miss school during quarantine.
-- **Missed Days:** Sick students miss **4 days** after rash; exposed but not sick miss **21 days**.
-- **Attack Rate:** Percent of susceptible students who end up infected in this scenario.
-""")
+    # -------- Assumptions & notes --------
+    with st.expander("Assumptions & notes", expanded=False):
+        st.markdown(
+            """
+            - **R₀ (contagiousness):** We use **12** as a typical measles value. Lower or higher changes how fast it spreads.
+            - **MMR coverage:** Share of students already protected. Lower coverage → more students at risk.
+            - **Hospitalizations:** We show **20%** of infections as a teaching example.
+            - **Deaths:** We show **0.03%** of infections; actual risk varies by age and health.
+            - **Isolation vs. quarantine:** Sick students miss **4 days** after rash; exposed but not sick miss **21 days**.
+            - **Attack rate:** Percent of susceptible students who end up infected under these assumptions.
+            - **Limitations:** Simplified education tool. No special interventions modeled; weekends/holidays not applied.
+            """
+        )
+        st.info("For real-world guidance, consult ADHS and your local health authority.")
 
-    # ---------- Educational disclaimer ----------
-    st.markdown("""
-    <div class="blocked-text" style="margin-top:0.5rem;">
-      <strong>Educational disclaimer:</strong> This simulator is for education and planning only. It simplifies real-world
-      public health dynamics and assumes no additional interventions (e.g., targeted vaccination, masking, closures).
-      It also ignores holidays and behavior changes. For real-time guidance, please consult ADHS and your local health authority.
-    </div>
-    """, unsafe_allow_html=True)
+
+def tab5_view(df_schools: pd.DataFrame):
+    render(df_schools)
