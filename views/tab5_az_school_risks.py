@@ -109,21 +109,6 @@ def tab5_view(df_schools):
             """, unsafe_allow_html=True)
             custom_expander("What does this mean?", assumption['explanation'])
 
-    # --- Interactive Learning Section ---
-    st.markdown("---")
-    custom_expander(
-        "Try This: Herd Immunity Calculator",
-        f"""
-        **Calculate the vaccination rate needed for herd immunity:**
-        
-        With R₀ = 12, we need **{(1 - 1/12) * 100:.1f}%** of the population vaccinated to achieve herd immunity.
-        
-        **Formula**: Herd Immunity Threshold = (1 - 1/R₀) × 100
-        
-        This means if {(1 - 1/12) * 100:.1f}% of students are vaccinated, an outbreak is unlikely to spread widely even if measles is introduced.
-        """,
-        open=False
-    )
 
     # --- Simulation Mode & School Details ---
     st.markdown("---")
