@@ -6,6 +6,39 @@ import plotly.graph_objects as go
 from datetime import datetime, timedelta
 
 def tab5_view(df_schools):
+    # --- Custom CSS for better styling ---
+    st.markdown("""
+    <style>
+    .info-dropdown {
+        margin-top: 5px;
+        font-size: 0.85rem;
+        line-height: 1.4;
+    }
+    .educational-note {
+        background: #e8f4fd;
+        border-left: 4px solid #1f77b4;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+    }
+    .warning-note {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 5px;
+    }
+    .blocked-text {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 5px;
+        line-height: 1.6;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     # --- Header & Educational Introduction ---
     st.markdown("""
     <div style='text-align:center; margin-bottom:1.5em;'>
@@ -17,8 +50,8 @@ def tab5_view(df_schools):
     </div>
     """, unsafe_allow_html=True)
 
-    # Educational context section with enhanced content
-    if st.expander("🦠 Understanding Disease Transmission (Click to Learn More)", expanded=False):
+    # Educational context section
+    with st.expander("Understanding Disease Transmission (Click to Learn More)", expanded=False):
         st.markdown("""
         **Why is measles so contagious?**
         
@@ -29,35 +62,7 @@ def tab5_view(df_schools):
         - **Herd Immunity**: When enough people are vaccinated to protect the whole community
         - **Attack Rate**: The percentage of susceptible people who get infected during an outbreak
         - **Quarantine vs Isolation**: Isolation separates sick people; quarantine separates those who might be sick
-        
-        **Measles Timeline:**
-        - **Day 0**: Exposure to measles virus
-        - **Days 8-12**: Symptoms begin (fever, cough, runny nose)
-        - **Days 12-14**: Characteristic rash appears
-        - **Days 14-18**: Recovery begins (in uncomplicated cases)
-        - **Contagious period**: 4 days before rash to 4 days after rash appears
         """)
-
-    # Add educational quiz section
-    if st.expander("📚 Test Your Knowledge", expanded=False):
-        st.markdown("**Quick Quiz: How well do you understand measles?**")
-        
-        quiz_col1, quiz_col2 = st.columns(2)
-        with quiz_col1:
-            q1 = st.radio("How long can measles virus survive in the air?", 
-                         ["30 minutes", "2 hours", "24 hours"], key="quiz1")
-            if q1 == "2 hours":
-                st.success("✅ Correct! Measles can survive in the air for up to 2 hours.")
-            elif q1:
-                st.error("❌ Incorrect. Measles can survive in the air for up to 2 hours.")
-        
-        with quiz_col2:
-            q2 = st.radio("What percentage of people need to be vaccinated for herd immunity?", 
-                         ["75%", "85%", "92%"], key="quiz2")
-            if q2 == "92%":
-                st.success("✅ Correct! About 92% vaccination rate is needed for measles herd immunity.")
-            elif q2:
-                st.error("❌ Incorrect. About 92% vaccination rate is needed for herd immunity.")
 
     st.markdown("""
     <div style='text-align:center; margin-bottom:1em;'>
@@ -65,116 +70,77 @@ def tab5_view(df_schools):
     </div>
     """, unsafe_allow_html=True)
 
-    # --- Enhanced Assumptions with Buttons (no session state needed) ---
+    # --- Enhanced Assumptions with Dropdowns ---
     assumptions_data = [
         {
             "title": "R₀: 12",
             "link": "https://pubmed.ncbi.nlm.nih.gov/28757186/",
             "link_text": "PubMed",
             "bg_color": "#2f2e41",
-            "key": "r0",
-            "explanation": "R₀ (R-naught) is the basic reproduction number - how many people one infected person will infect on average in a completely susceptible population. Measles has an R₀ of 12, making it one of the most contagious diseases. For comparison: COVID-19 original strain ≈ 2-3, Seasonal flu ≈ 1.3, Chickenpox ≈ 10-12."
+            "explanation": "R₀ (R-naught) is the basic reproduction number - how many people one infected person will infect on average in a completely susceptible population. Measles has an R₀ of 12, making it one of the most contagious diseases. For comparison: COVID-19 original strain ≈ 2-3, Seasonal flu ≈ 1.3."
         },
         {
             "title": "MMR Rate: ADHS 2024–25",
             "link": "https://www.azdhs.gov/preparedness/epidemiology-disease-control/immunization/#reports-immunization-coverage",
             "link_text": "ADHS",
             "bg_color": "#3d3c5a",
-            "key": "mmr",
-            "explanation": "MMR (Measles, Mumps, Rubella) vaccination rate for kindergarten students in Arizona. The MMR vaccine is about 97% effective after two doses. Arizona requires this data to be reported annually by schools. The state requires 95% coverage but allows medical, religious, and personal belief exemptions."
+            "explanation": "MMR (Measles, Mumps, Rubella) vaccination rate for kindergarten students in Arizona. The MMR vaccine is about 97% effective after two doses. Arizona requires this data to be reported annually by schools."
         },
         {
             "title": "Hospitalization Rate: 20%",
             "link": "https://www.nfid.org/infectious-disease/measles/",
             "link_text": "NFID",
             "bg_color": "#47465c",
-            "key": "hosp",
-            "explanation": "About 1 in 5 people with measles need hospital care. Complications can include pneumonia (lung infection), brain swelling (encephalitis), and severe diarrhea. Children under 5 and adults over 20 are at highest risk for complications. Pneumonia is the most common cause of death in young children."
+            "explanation": "About 1 in 5 people with measles need hospital care. Complications can include pneumonia (lung infection), brain swelling, and severe diarrhea. Children under 5 and adults over 20 are at highest risk for complications."
         },
         {
             "title": "Death Rate: 0.03%",
             "link": "https://www.uchicagomedicine.org/forefront/pediatrics-articles/measles-is-still-a-very-dangerous-disease",
             "link_text": "UChicago",
             "bg_color": "#4e4d6b",
-            "key": "death",
-            "explanation": "While rare in developed countries with good healthcare, measles can be fatal. Deaths usually occur from complications like pneumonia or brain swelling (encephalitis). The death rate is higher in children under 5 (1 in 1,000) and adults over 20. Before vaccines, measles killed 400-500 children annually in the US."
+            "explanation": "While rare in developed countries with good healthcare, measles can be fatal. Deaths usually occur from complications like pneumonia or brain swelling (encephalitis). The death rate is higher in children under 5 and adults over 20."
         },
         {
             "title": "Isolation: 4 days",
             "link": "https://www.azdhs.gov/documents/preparedness/epidemiology-disease-control/infectious-disease-epidemiology/school-childcare/measles-protocol.pdf",
             "link_text": "Protocol",
             "bg_color": "#5A4E7A",
-            "key": "isolation",
-            "explanation": "People with measles must stay home from 4 days before the rash appears until 4 days after the rash appears. This is when they're most contagious. The rash typically appears 2-3 days after symptoms begin. People are most contagious 2-3 days before symptoms start, when they don't even know they're sick!"
+            "explanation": "People with measles must stay home from 4 days before the rash appears until 4 days after the rash appears. This is when they're most contagious. The rash typically appears 2-3 days after symptoms begin."
         },
         {
             "title": "Quarantine: 21 days",
             "link": "https://www.azdhs.gov/documents/preparedness/epidemiology-disease-control/infectious-disease-epidemiology/school-childcare/mmr-guidance.pdf",
             "link_text": "ADHS",
             "bg_color": "#6d6b85",
-            "key": "quarantine",
-            "explanation": "Unvaccinated people exposed to measles must be excluded from school for 21 days after their last exposure (the measles incubation period). This prevents them from spreading the disease if they become infected, since symptoms can take up to 21 days to appear. This is a precautionary measure even if they never develop symptoms."
+            "explanation": "Unvaccinated people exposed to measles must be excluded from school for 21 days after their last exposure (the measles incubation period). This prevents them from spreading the disease if they become infected, since symptoms can take up to 21 days to appear."
         }
     ]
 
-    # Display assumptions with immediate info display (no buttons needed)
+    # Display assumptions with dropdowns
     cols = st.columns(3)
     for i, assumption in enumerate(assumptions_data):
         with cols[i % 3]:
-            with st.container():
-                st.markdown(f"""
-                <div style='background:{assumption["bg_color"]}; color:white; padding:1rem; border-radius:10px; margin-bottom:0.5rem;'>
-                  <strong>{assumption["title"]}</strong><br>
-                  <a href="{assumption["link"]}" target="_blank" style="color:#a5c9ff;">{assumption["link_text"]}</a>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                # Show explanation in expandable section
-                with st.expander(f"ℹ️ About {assumption['title'].split(':')[0]}"):
-                    st.write(assumption['explanation'])
+            st.markdown(f"""
+            <div style='background:{assumption["bg_color"]}; color:white; padding:1rem; border-radius:10px; margin-bottom:0.5rem;'>
+              <strong>{assumption["title"]}</strong><br>
+              <a href="{assumption["link"]}" target="_blank" style="color:#a5c9ff;">{assumption["link_text"]}</a>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            with st.expander("What does this mean?"):
+                st.markdown(assumption['explanation'])
 
     # --- Interactive Learning Section ---
     st.markdown("---")
-    if st.expander("🧮 Try This: Herd Immunity Calculator", expanded=False):
+    with st.expander("Try This: Herd Immunity Calculator", expanded=False):
         st.markdown("**Calculate the vaccination rate needed for herd immunity:**")
-        
-        # Interactive R0 slider
-        r0_slider = st.slider("Adjust R₀ (Basic Reproduction Number)", 2, 18, 12, 
-                             help="Drag to see how contagiousness affects herd immunity threshold")
-        herd_immunity_threshold = (1 - 1/r0_slider) * 100
-        
+        herd_immunity_threshold = (1 - 1/12) * 100  # (1 - 1/R₀) × 100
         st.markdown(f"""
-        With R₀ = {r0_slider}, we need **{herd_immunity_threshold:.1f}%** of the population vaccinated to achieve herd immunity.
+        With R₀ = 12, we need **{herd_immunity_threshold:.1f}%** of the population vaccinated to achieve herd immunity.
         
         **Formula**: Herd Immunity Threshold = (1 - 1/R₀) × 100
         
         This means if {herd_immunity_threshold:.1f}% of students are vaccinated, an outbreak is unlikely to spread widely even if measles is introduced.
-        
-        **Disease Comparison:**
-        - Measles (R₀=12): 92% vaccination needed
-        - Chickenpox (R₀=10): 90% vaccination needed  
-        - COVID-19 original (R₀=3): 67% vaccination needed
-        - Seasonal flu (R₀=1.3): 23% vaccination needed
-        """)
-
-    # Add real-world context section
-    if st.expander("🌍 Real-World Measles Outbreaks", expanded=False):
-        st.markdown("""
-        **Recent Arizona Measles Cases:**
-        - 2024: Several cases linked to international travel
-        - 2019: 9 cases in Pinal County
-        - 2008: 7 cases, including school exposures
-        
-        **Why Outbreaks Still Happen:**
-        1. **Travel**: People bring measles back from countries with lower vaccination rates
-        2. **Vaccine Hesitancy**: Some communities have lower vaccination rates
-        3. **Missed Opportunities**: Some children miss routine vaccinations
-        4. **Medical Exemptions**: Some children cannot be vaccinated due to medical conditions
-        
-        **Global Impact:**
-        - Before vaccines: ~2.6 million annual deaths worldwide
-        - 2019: Over 207,000 measles deaths globally
-        - 2000-2018: Measles vaccination prevented 21.1 million deaths
         """)
 
     # --- Simulation Mode & School Details ---
@@ -189,16 +155,12 @@ def tab5_view(df_schools):
         enrollment = int(data["ENROLLED"])
         immune = float(data["IMMUNE_MMR"])
     else:
-        col1, col2 = st.columns(2)
-        with col1:
-            enrollment = st.number_input("Total Students", 1, 1000, 500)
-        with col2:
-            immune = st.slider("MMR Immunization Rate", 0.0, 1.0, 0.85, 
-                              help="Drag to see how vaccination rates affect outbreak size")
+        enrollment = st.number_input("Total Students", 1, 1000, 500)
+        immune = st.slider("MMR Immunization Rate", 0.0, 1.0, 0.85, help="Drag to see how vaccination rates affect outbreak size")
 
     susceptible = enrollment * (1 - immune)
     
-    # Enhanced School Details with immediate info display
+    # Enhanced School Details with explanatory dropdowns
     st.markdown(f"""
     <div style='text-align:center; margin-bottom:1em;'>
       <h2 style='margin-bottom:0.3em;'>School Details</h2>
@@ -213,48 +175,52 @@ def tab5_view(df_schools):
           <strong>Total Students:</strong><br>{enrollment:,}
         </div>
         """, unsafe_allow_html=True)
-        with st.expander("ℹ️ About Total Students"):
-            st.write("This is the total number of kindergarten students enrolled at the school. Kindergarten students are often used in outbreak modeling because they have the most recent vaccination data and spend lots of time in close contact.")
+        with st.expander("What does this mean?"):
+            st.markdown("This is the total number of kindergarten students enrolled at the school. Kindergarten students are often used in outbreak modeling because they have the most recent vaccination data and spend lots of time in close contact.")
     
     with detail_cols[1]:
-        color = "#28a745" if immune >= 0.917 else "#dc3545"
         st.markdown(f"""
-        <div style='background:{color}; color:white; padding:0.8rem; border-radius:8px; text-align:center;'>
+        <div style='background:#4b4971; color:white; padding:0.8rem; border-radius:8px; text-align:center;'>
           <strong>MMR Coverage:</strong><br>{immune*100:.1f}%
         </div>
         """, unsafe_allow_html=True)
-        with st.expander("ℹ️ About MMR Coverage"):
-            status = '✅ Above herd immunity threshold' if immune >= 0.917 else '⚠️ Below herd immunity threshold'
-            st.write(f"""
-            This is the percentage of students who are immune to measles (usually through vaccination).
+        with st.expander("💉 What does this mean?"):
+            st.markdown(f"""
+            This is the percentage of students who are immune to measles (usually through vaccination). 
             
-            **Current status:** {status}
+            **Current status**: {'Above herd immunity threshold' if immune >= 0.917 else 'Below herd immunity threshold'}
             
             Arizona requires 95% MMR coverage, but allows exemptions for medical, religious, or personal beliefs.
             """)
     
     with detail_cols[2]:
-        risk_color = "#28a745" if susceptible < enrollment * 0.1 else "#ffc107" if susceptible < enrollment * 0.2 else "#dc3545"
         st.markdown(f"""
-        <div style='background:{risk_color}; color:white; padding:0.8rem; border-radius:8px; text-align:center;'>
+        <div style='background:#5a5977; color:white; padding:0.8rem; border-radius:8px; text-align:center;'>
           <strong>Susceptible Students:</strong><br>{int(susceptible):,}
         </div>
         """, unsafe_allow_html=True)
-        with st.expander("ℹ️ About Susceptible Students"):
-            risk_level = '🟢 Low risk' if susceptible < enrollment * 0.1 else '🟡 Moderate risk' if susceptible < enrollment * 0.2 else '🔴 High risk'
-            st.write(f"""
+        with st.expander("🎯 What does this mean?"):
+            st.markdown(f"""
             These are students who could get measles if exposed - calculated as: Total Students × (1 - Vaccination Rate)
             
-            **Risk level:** {risk_level}
+            **Risk level**: {'Low risk' if susceptible < enrollment * 0.1 else 'Moderate risk' if susceptible < enrollment * 0.2 else 'High risk'}
             
             The more susceptible students, the faster and larger an outbreak can become.
             """)
 
-    # Show vaccination impact with visual indicators
+    # Show vaccination impact
     if immune < 0.917:
-        st.error("⚠️ **Below Herd Immunity Threshold:** With vaccination rates below 91.7%, this school community is vulnerable to measles outbreaks. Even a single case could lead to widespread transmission.")
+        st.markdown("""
+        <div class="warning-note">
+          <strong>Below Herd Immunity Threshold:</strong> With vaccination rates below 91.7%, this school community is vulnerable to measles outbreaks. Even a single case could lead to widespread transmission.
+        </div>
+        """, unsafe_allow_html=True)
     else:
-        st.success("✅ **Above Herd Immunity Threshold:** This school has strong community protection! High vaccination rates make large outbreaks unlikely.")
+        st.markdown("""
+        <div class="educational-note">
+          <strong>Above Herd Immunity Threshold:</strong> This school has strong community protection! High vaccination rates make large outbreaks unlikely.
+        </div>
+        """, unsafe_allow_html=True)
 
     # --- Simulation Calculations ---
     R0 = 12
@@ -275,7 +241,7 @@ def tab5_view(df_schools):
     quarantine_missed = noninfected * q_days
     total_days_missed = isolate_missed + quarantine_missed
     
-    # --- Enhanced Daily Cases Chart ---
+    # --- Enhanced Daily Cases Chart with Fixed Y-Axis ---
     st.markdown("<h2 style='text-align:center; margin:0.75em 0 0.5em;'>Estimated Daily Measles Cases</h2>", unsafe_allow_html=True)
     
     days = np.arange(0, 90)
@@ -291,112 +257,136 @@ def tab5_view(df_schools):
             x=days,
             y=daily,
             marker_color=bar_color,
-            hovertemplate='Day %{x}<br>New Cases: %{y:.1f}<br>Cumulative: %{customdata:.0f}<extra></extra>',
+            hovertemplate='Day %{x}<br>Cases: %{y:.1f}<br>Cumulative: %{customdata:.0f}<extra></extra>',
             customdata=np.cumsum(daily)
         )
     ])
     
-    peak_day = np.argmax(daily)
-    peak_cases = np.max(daily)
-    
-    fig.add_annotation(
-        x=peak_day,
-        y=peak_cases,
-        text=f"Peak: Day {peak_day}<br>{peak_cases:.1f} cases",
-        showarrow=True,
-        arrowhead=2,
-        arrowcolor="red",
-        font=dict(color="red")
-    )
-    
+    # Fixed y-axis at 20 as requested
     fig.update_layout(
         xaxis=dict(title="Days since Introduction", showgrid=False),
-        yaxis=dict(title="Daily New Cases (students)", showgrid=False),
+        yaxis=dict(title="Daily New Cases (students)", showgrid=False, range=[0, 20]),
         plot_bgcolor='rgba(0,0,0,0)',
-        margin=dict(t=15, b=0)
+        margin=dict(t=20, b=0)
     )
     
     st.plotly_chart(fig, use_container_width=True, config={"responsive": True})
     
-    st.markdown(f"""
-    This bar chart shows the projected number of new measles cases per school day over a 90-day period. 
-    The outbreak peaks around **Day {peak_day}** with **{peak_cases:.1f} new cases**. 
-    By Day 60, approximately **{np.sum(daily[:60]):.0f} students** ({np.sum(daily[:60])/total_cases*100:.0f}% of total cases) would have been infected.
-    """)
+    st.markdown("""
+    <div class="blocked-text">
+      This bar chart shows the projected number of new measles cases per school day over a 90-day period following the introduction of the virus into the school.
+      The curve follows a gamma distribution: it rises gradually as the outbreak grows, peaks around Day 12 when most susceptible students have been exposed, then tapers off as fewer susceptibles remain.
+      Hover over each bar to see exact numbers and cumulative cases.
+    </div>
+    """, unsafe_allow_html=True)
 
     # --- Interactive Timeline ---
-    if st.expander("📅 Interactive Disease Timeline", expanded=False):
+    with st.expander("Interactive Disease Timeline", expanded=False):
         timeline_day = st.slider("Explore the timeline: Day", 0, 30, 0)
-        cumulative_cases = np.cumsum(daily)[timeline_day] if timeline_day < len(daily) else total_cases
-        remaining_susceptible = max(0, susceptible - cumulative_cases)
-        
-        stage_description = (
-            "🟢 The outbreak is just beginning. Most students are still susceptible." if timeline_day < 5 else
-            "🟡 Cases are rising rapidly as the virus spreads through the school." if timeline_day < 15 else
-            "🔴 The outbreak is peaking. Many susceptible students have been exposed." if timeline_day < 25 else
-            "🟢 The outbreak is winding down. Few susceptible students remain."
-        )
-        
         st.markdown(f"""
-        **Day {timeline_day} Summary:**
-        - 📈 New cases today: **{daily[timeline_day]:.1f} students**
-        - 📊 Total cases so far: **{cumulative_cases:.0f} students**
-        - 👥 Remaining susceptible: **{remaining_susceptible:.0f} students**
-        - 📚 Students in quarantine: **{int(remaining_susceptible):.0f} students**
+        **Day {timeline_day}:**
+        - New cases today: {daily[timeline_day]:.1f} students
+        - Total cases so far: {np.cumsum(daily)[timeline_day]:.0f} students
+        - Remaining susceptible: {susceptible - np.cumsum(daily)[timeline_day]:.0f} students
         
-        **What's happening?** {stage_description}
+        **What's happening?**
+        {
+        "The outbreak is just beginning. Most students are still susceptible." if timeline_day < 5 else
+        "Cases are rising rapidly as the virus spreads through the school." if timeline_day < 15 else
+        "The outbreak is peaking. Many susceptible students have been exposed." if timeline_day < 25 else
+        "The outbreak is winding down. Few susceptible students remain."
+        }
         """)
 
-    # --- Enhanced Outbreak Summary ---
+    # --- School Calendar: Exclusion (Quarantine) Days ---
+    st.markdown("<h2 style='text-align:center; margin:0.75em 0 0.5em;'>School Calendar: Exclusion (Quarantine) Days</h2>", unsafe_allow_html=True)
+    
+    school_days, curr = [], datetime.today().date()
+    while len(school_days) < 30:
+        if curr.weekday() < 5:
+            school_days.append(curr)
+        curr += timedelta(days=1)
+    exclusion_days = set(school_days[:q_days])
+    
+    # Fixed-width container for calendar
+    cal_html = "<div style='max-width:680px; margin:auto;'><table style='width:100%; text-align:center; border-collapse:collapse;'><tr>"
+    cal_html += ''.join(
+        f"<th style='padding:6px;border-bottom:1px solid#ccc'>{wd}</th>" for wd in ['Mon','Tue','Wed','Thu','Fri']
+    ) + '</tr>'
+    
+    i = 0
+    while i < len(school_days):
+        week = '<tr>'
+        wd0 = school_days[i].weekday()
+        week += ''.join("<td style='padding:12px;border:1px solid#eee;background:#f0f0f0'></td>" for _ in range(wd0))
+        for wd in range(wd0, 5):
+            if i >= len(school_days):
+                week += "<td style='padding:12px;border:1px solid#eee;background:#f0f0f0'></td>"
+            else:
+                d = school_days[i]
+                style = 'background:#2f2e41; color:white; ' if d in exclusion_days else ''
+                title = f"Quarantine Day {i+1}" if d in exclusion_days else ''
+                week += f"<td title='{title}' style='padding:12px;border:1px solid#eee;{style}'>{d.strftime('%b %d')}</td>"
+                i += 1
+        week += '</tr>'
+        cal_html += week
+    cal_html += '</table></div>'
+    
+    st.markdown(cal_html, unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div class="blocked-text">
+      Confirmed measles cases must be kept out of school from symptom onset through 4 days after rash onset.
+      Unvaccinated or incompletely vaccinated exposed students are excluded for 21 days after last exposure.
+      This calendar shows the next 30 school weekdays with shaded cells marking quarantine days. The dark cells represent days when unvaccinated students would be excluded from school.
+    </div>
+    """, unsafe_allow_html=True)
+
+    # --- Enhanced Outbreak Summary with Explanatory Dropdowns ---
     st.markdown("---")
     st.markdown("<h2 style='text-align:center; margin:0.75em 0 0.5em;'>Outbreak Summary</h2>", unsafe_allow_html=True)
     
+    # Create the summary cards
     summary_data = [
         {
             "title": "Total Infected",
             "value": f"{int(total_cases):,}",
-            "percentage": f"({total_cases/enrollment*100:.1f}% of school)",
             "bg_color": colors[-3],
-            "icon": "🦠"
+            "explanation": f"This is the estimated total number of students who would get measles during the outbreak. It's calculated using the attack rate ({attack*100:.1f}%) multiplied by susceptible students ({int(susceptible):,}). The attack rate depends on how contagious measles is (R₀=12) and how many students are susceptible."
         },
         {
             "title": "Hospitalizations",
             "value": f"{int(total_cases*hosp_rate):,}",
-            "percentage": f"({hosp_rate*100:.0f}% of cases)",
             "bg_color": colors[-4],
-            "icon": "🏥"
+            "explanation": f"About 20% of measles cases require hospitalization due to complications like pneumonia, severe diarrhea, or brain swelling. This represents {int(total_cases*hosp_rate):,} students who would likely need hospital care. Children under 5 are at highest risk for severe complications."
         },
         {
             "title": "Deaths",
-            "value": f"{max(1, int(total_cases*death_rate)):,}" if total_cases*death_rate >= 0.5 else "<1",
-            "percentage": f"({death_rate*100:.2f}% of cases)",
+            "value": f"{int(total_cases*death_rate):,}",
             "bg_color": colors[-5],
-            "icon": "💀"
+            "explanation": f"While rare in countries with good healthcare, measles can be fatal in about 0.03% of cases (roughly 3 in 10,000). Deaths usually result from complications like pneumonia or brain inflammation. This estimate shows the statistical risk, though actual outcomes depend on medical care quality and individual health factors."
         },
         {
-            "title": "Quarantined Students",
+            "title": "Exposed Students",
             "value": f"{int(noninfected):,}",
-            "percentage": f"({noninfected/enrollment*100:.1f}% of school)",
             "bg_color": colors[-6],
-            "icon": "🏠"
+            "explanation": f"These are unvaccinated students who were exposed to measles but didn't get infected. They still must be quarantined for 21 days as a precaution because measles symptoms can take up to 21 days to appear. Even though they're not sick, they miss school to prevent potential spread."
         },
         {
             "title": "Total Missed Days",
             "value": f"{int(total_days_missed):,}",
-            "percentage": f"({total_days_missed/(enrollment*180)*100:.1f}% of school-year)",
             "bg_color": colors[-7],
-            "icon": "📅"
+            "explanation": f"This combines school days missed by infected students (isolation: {int(isolate_missed):,} days) and exposed unvaccinated students (quarantine: {int(quarantine_missed):,} days). Each infected student misses 4 days, each exposed unvaccinated student misses 21 days. This represents the total educational disruption."
         },
         {
             "title": "Attack Rate",
             "value": f"{attack*100:.1f}%",
-            "percentage": "of susceptible students",
             "bg_color": colors[-8],
-            "icon": "📈"
+            "explanation": f"The attack rate is the percentage of susceptible people who get infected during an outbreak. It depends on how contagious the disease is (R₀) and the proportion of susceptible people. With R₀=12 and {susceptible/enrollment*100:.1f}% of students susceptible, {attack*100:.1f}% of susceptible students would likely get measles."
         }
     ]
     
-    # Display enhanced summary cards
+    # Display summary cards in two rows
     cols1 = st.columns(3)
     cols2 = st.columns(3)
     all_cols = cols1 + cols2
@@ -405,138 +395,46 @@ def tab5_view(df_schools):
         with all_cols[i]:
             st.markdown(f"""
             <div style='background:{item["bg_color"]}; color:white; padding:1rem; border-radius:8px; text-align:center; margin-bottom:0.5rem;'>
-              <div style='font-size:1.5em; margin-bottom:0.5em;'>{item["icon"]}</div>
-              <strong>{item["title"]}</strong><br>
-              <span style='font-size:1.2em;'>{item["value"]}</span><br>
-              <small>{item["percentage"]}</small>
+              <strong>{item["title"]}</strong><br>{item["value"]}
             </div>
             """, unsafe_allow_html=True)
-
-    # Add cost analysis section
-    if st.expander("💰 Economic Impact Analysis", expanded=False):
-        avg_hosp_cost = 15000  # Average pediatric hospitalization cost
-        parent_lost_wages = 150  # Per day of missed work
-        
-        total_hosp_cost = int(total_cases * hosp_rate) * avg_hosp_cost
-        parent_cost = int(total_days_missed) * parent_lost_wages * 0.7  # Assume 70% of parents miss work
-        
-        st.markdown(f"""
-        **Estimated Economic Costs:**
-        - 🏥 Hospitalization costs: **${total_hosp_cost:,}**
-        - 💼 Parent lost wages: **${int(parent_cost):,}**
-        - 📚 Educational disruption: **{int(total_days_missed)} school days lost**
-        - 🏫 School response costs: **$5,000 - $25,000** (contact tracing, communication, cleaning)
-        
-        **Total Estimated Cost: ${total_hosp_cost + int(parent_cost) + 15000:,}**
-        
-        *Note: These are rough estimates. Actual costs vary significantly based on local factors.*
-        """)
-
-    # --- Enhanced School Calendar ---
-    st.markdown("<h2 style='text-align:center; margin:0.75em 0 0.5em;'>📅 School Calendar: Exclusion Timeline</h2>", unsafe_allow_html=True)
-    
-    school_days, curr = [], datetime.today().date()
-    while len(school_days) < 30:
-        if curr.weekday() < 5:  # Monday = 0, Friday = 4
-            school_days.append(curr)
-        curr += timedelta(days=1)
-    
-    exclusion_days = set(school_days[:q_days])
-    
-    cal_html = "<div style='max-width:680px; margin:auto;'><table style='width:100%; text-align:center; border-collapse:collapse;'><tr>"
-    cal_html += ''.join(
-        f"<th style='padding:6px;border-bottom:2px solid#333; font-weight:bold;'>{wd}</th>" 
-        for wd in ['Monday','Tuesday','Wednesday','Thursday','Friday']
-    ) + '</tr>'
-    
-    i = 0
-    week_count = 0
-    while i < len(school_days) and week_count < 6:  # Show 6 weeks max
-        week = '<tr>'
-        if i < len(school_days):
-            wd0 = school_days[i].weekday()
-            # Add empty cells for days before the first Monday
-            week += ''.join("<td style='padding:12px;border:1px solid#eee;background:#f9f9f9'></td>" for _ in range(wd0))
             
-            for wd in range(wd0, 5):
-                if i >= len(school_days):
-                    week += "<td style='padding:12px;border:1px solid#eee;background:#f9f9f9'></td>"
-                else:
-                    d = school_days[i]
-                    if d in exclusion_days:
-                        quarantine_day = list(exclusion_days).index(d) + 1
-                        style = 'background:#dc3545; color:white; font-weight:bold;'
-                        title = f"Quarantine Day {quarantine_day}/21"
-                    else:
-                        style = 'background:#28a745; color:white;'
-                        title = 'Normal School Day'
-                    week += f"<td title='{title}' style='padding:12px;border:1px solid#eee;{style}'>{d.strftime('%b %d')}</td>"
-                    i += 1
-        week += '</tr>'
-        cal_html += week
-        week_count += 1
-    
-    cal_html += '</table>'
-    cal_html += "<div style='margin-top:1em; text-align:center;'>"
-    cal_html += "<span style='display:inline-block; width:20px; height:20px; background:#dc3545; margin-right:5px;'></span>Quarantine Days "
-    cal_html += "<span style='display:inline-block; width:20px; height:20px; background:#28a745; margin-left:15px; margin-right:5px;'></span>Normal School Days"
-    cal_html += "</div></div>"
-    
-    st.markdown(cal_html, unsafe_allow_html=True)
-    
-    st.info(f"""
-    📋 **Exclusion Policy Summary:**
-    - 🤒 **Infected students**: Excluded for 4 days after rash appears
-    - 🏠 **Unvaccinated exposed students**: Excluded for 21 days after last exposure  
-    - 💉 **Vaccinated exposed students**: May continue attending (monitor for symptoms)
-    - 🔍 **Total affected**: {int(total_cases + noninfected)} students excluded from school
-    """)
+            with st.expander(f"Understanding {item['title']}"):
+                st.markdown(item['explanation'])
 
-    # --- Prevention and Action Section ---
-    if st.expander("🛡️ Prevention & What You Can Do", expanded=False):
-        st.markdown("""
-        **Preventing Measles Outbreaks:**
-        
-        **Individual Actions:**
-        - 💉 **Get Vaccinated**: MMR vaccine is 97% effective after 2 doses
-        - 📋 **Check Records**: Ensure your child's vaccinations are up to date
-        - 🌍 **Travel Safely**: Get vaccinated before international travel
-        - 🤒 **Stay Home When Sick**: Don't send sick children to school
-        
-        **Community Actions:**
-        - 🏫 **School Policies**: Support strong vaccination requirements
-        - 📚 **Education**: Share accurate information about vaccine safety
-        - 🤝 **Support**: Help families access healthcare and vaccines
-        - 📞 **Report Cases**: Contact health authorities if measles is suspected
-        
-        **Why Vaccination Matters:**
-        - Protects YOUR child (97% effective)
-        - Protects COMMUNITY (herd immunity)
-        - Protects VULNERABLE populations (babies, immunocompromised)
-        - Prevents OUTBREAKS and school closures
-        """)
-
-    # --- Resources Section ---
-    if st.expander("📚 Additional Resources", expanded=False):
-        st.markdown("""
-        **Reliable Information Sources:**
-        
-        **Arizona Department of Health Services:**
-        - [ADHS Measles Information](https://www.azdhs.gov/preparedness/epidemiology-disease-control/infectious-disease-epidemiology/index.php#novel-coronavirus-home)
-        - [School Immunization Requirements](https://www.azdhs.gov/preparedness/epidemiology-disease-control/immunization/index.php#school-immunization-requirements)
-        
-        **National Resources:**
-        - [CDC Measles Information](https://www.cdc.gov/measles/)
-        - [Vaccine Safety Information](https://www.cdc.gov/vaccinesafety/)
-        - [Travel Health Notices](https://wwwnc.cdc.gov/travel/notices)
-        
-        **For Healthcare Providers:**
-        - [ADHS Measles Protocol](https://www.azdhs.gov/documents/preparedness/epidemiology-disease-control/infectious-disease-epidemiology/school-childcare/measles-protocol.pdf)
-        - [CDC Clinical Features](https://www.cdc.gov/measles/hcp/index.html)
-        """)
-
-    # --- Enhanced Disclaimer ---
+    # --- Educational Comparison Tool ---
     st.markdown("---")
-    st.warning("""
-    **📋 Educational Disclaimer:** This simulator is designed for educational purposes to help understand disease transmission dynamics. 
-    It uses simplified mathematical models with fixed parameters and assumes no additional public health interventions during an
+    with st.expander("Compare Different Scenarios", expanded=False):
+        st.markdown("**See how vaccination rates affect outbreak size:**")
+        
+        comparison_rates = [0.70, 0.85, 0.92, 0.95]
+        comparison_data = []
+        
+        for rate in comparison_rates:
+            comp_susceptible = enrollment * (1 - rate)
+            comp_s_frac = comp_susceptible / enrollment if enrollment else 0
+            comp_z = 0.0001
+            for _ in range(50):
+                comp_z = 1 - np.exp(-R0 * comp_z * comp_s_frac)
+            comp_attack = min(comp_z, 1.0)
+            comp_cases = comp_attack * comp_susceptible
+            comparison_data.append({
+                'Vaccination Rate': f"{rate*100:.0f}%",
+                'Total Cases': int(comp_cases),
+                'Hospitalizations': int(comp_cases * 0.2)
+            })
+        
+        comp_df = pd.DataFrame(comparison_data)
+        st.dataframe(comp_df, hide_index=True)
+        st.markdown("*Notice how vaccination rates above 92% dramatically reduce outbreak size!*")
+
+    # --- Disclaimer ---
+    st.markdown("""
+    <div class="blocked-text">
+      <strong>Educational Disclaimer:</strong> This simulator is designed for educational purposes to help understand disease transmission dynamics. 
+      It uses simplified mathematical models with fixed parameters and assumes no additional public health interventions during an outbreak. 
+      Real outbreaks involve complex factors including behavior changes, public health responses, and seasonal variations. 
+      The model excludes holidays and weekends from school day calculations. For actual outbreak response and guidance, 
+      always consult the Arizona Department of Health Services (ADHS) and local public health authorities.
+    </div>
+    """, unsafe_allow_html=True)
