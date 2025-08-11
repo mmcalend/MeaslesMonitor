@@ -180,7 +180,7 @@ def tab5_view(df_schools):
     
     with detail_cols[1]:
         st.markdown(f"""
-        <div style='background:#4b4971; color:white; padding:0.8rem; border-radius:8px; text-align:center;'>
+        <div style='padding:0.8rem; border-radius:8px; text-align:center;'>
           <strong>MMR Coverage:</strong><br>{immune*100:.1f}%
         </div>
         """, unsafe_allow_html=True)
