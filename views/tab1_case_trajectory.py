@@ -48,9 +48,9 @@ def tab1_view(df, df_cdc_us):
     st.markdown("""
     <div style='font-size: 0.8rem;'>
         Data Sources: <br>
-        <a href='https://github.com/CSSEGISandData/measles_data' target='_blank'>JHU Measles Tracking Team</a> (state-level) <br>
-        <a href='https://www.cdc.gov/measles/data-research.html' target='_blank'>CDC</a> (U.S.-level). <br>
-        Note: Differences between the JHU and CDC counts can occur due to reporting delays, 
+        <a href='https://www.cdc.gov/measles/data-research.html' target='_blank'> U.S. Centers for Disease Control and Prevention (CDC) </a> (U.S. Level). <br>
+        <a href='https://github.com/CSSEGISandData/measles_data' target='_blank'>JHU Measles Tracking Team</a> (State Level) <br>
+        Note: Differences between the CDC and JHU counts can occur due to reporting delays, 
         aggregation methods, and case definition criteria.
     </div>
     """, unsafe_allow_html=True)
