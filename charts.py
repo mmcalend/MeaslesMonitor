@@ -157,7 +157,7 @@ def people_outcomes_chart(
     death_rate,
     per_unit=None,
     style="heads",                
-):
+    show_background=False          
     """
     Returns (fig, per_unit).
     style options: "heads" (circles), "square" (waffle), or "emoji" (🧍).
@@ -205,7 +205,7 @@ def people_outcomes_chart(
             r = i // cols
             c = i % cols
             xs.append(c)
-            ys.append(-r)  
+            ys.append(-r)  # stack downward
             colors.append(color)
             labels.append(label)
         return xs, ys, colors, labels, cols, rows
@@ -249,7 +249,7 @@ def people_outcomes_chart(
         "Deaths",
     ]
 
-   
+    # Build traces for chosen style (we’ll map “heads” → circle markers)
     def traces_for(grouped, use_mode, marker_kwargs, text_list=None):
         traces = []
         for cat in categories:
@@ -283,6 +283,21 @@ def people_outcomes_chart(
     fig = go.Figure(data=data0, frames=[go.Frame(data=dataF, name="final")])
     _legend(fig)
 
+    # Optional school backdrop drawn as shapes (simple building + roof)
+    shapes = []
+    if show_background:
+        # Compute bounds from grid
+        x0, x1 = -0.6, cols + 0.6
+        y_top, y_bot = 0.6, -(rows + 0.6)
+        # Building body
+        shapes.append(dict(type="rect", x0=x0, x1=x1, y0=y_top - 0.6, y1=y_top - 2.2,
+                           line=dict(color="rgba(0,0,0,0)"),
+                           fillcolor="rgba(150,150,180,0.08)", layer="below"))
+        # Roof (triangle)
+        shapes.append(dict(type="path",
+                           path=f"M {x0} {y_top - 0.6} L {(x0+x1)/2} {y_top + 0.2} L {x1} {y_top - 0.6} Z",
+                           line=dict(color="rgba(0,0,0,0)"),
+                           fillcolor="rgba(150,150,180,0.08)", layer="below"))
 
     fig.update_layout(
         xaxis=dict(visible=False, range=[-1, cols+1]),
