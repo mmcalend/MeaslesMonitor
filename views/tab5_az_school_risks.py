@@ -125,13 +125,13 @@ def tab5_view(df_schools: pd.DataFrame):
 
 
     # --- People (stick figure) chart using charts.py ---
-    fig_people, per_unit = people_outcomes_chart(
+      fig_people, per_unit = people_outcomes_chart(
         enrollment=enrollment,
         immune_rate=immune,
         infected=total_cases,
         hosp_rate=hosp_rate,
         death_rate=death_rate,
-        style="stick" 
+        style="vector"   # ← new clean stick figures
     )
     st.plotly_chart(fig_people, use_container_width=True, config={"responsive": True})
 
