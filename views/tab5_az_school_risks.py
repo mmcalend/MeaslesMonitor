@@ -6,12 +6,6 @@ import plotly.graph_objects as go
 from datetime import datetime, timedelta
 
 def tab5_view(df_schools):
-    # --- Custom CSS for better styling ---
-    st.markdown("""
-    <style>
-    </style>
-    """, unsafe_allow_html=True)
-
     # --- Header & Educational Introduction ---
     st.markdown("""
     <div style='text-align:center; margin-bottom:1.5em;'>
@@ -24,7 +18,7 @@ def tab5_view(df_schools):
     """, unsafe_allow_html=True)
 
     # Educational context section
-    with st.expander("Understanding Disease Transmission (Click to Learn More)", expanded=False):
+    if st.expander("Understanding Disease Transmission (Click to Learn More)", expanded=False):
         st.markdown("""
         **Why is measles so contagious?**
         
@@ -43,7 +37,7 @@ def tab5_view(df_schools):
     </div>
     """, unsafe_allow_html=True)
 
-    # --- Enhanced Assumptions with Dropdowns ---
+    # --- Enhanced Assumptions with Clean Dropdowns ---
     assumptions_data = [
         {
             "title": "R₀: 12",
@@ -89,7 +83,7 @@ def tab5_view(df_schools):
         }
     ]
 
-    # Display assumptions with dropdowns
+    # Display assumptions with clean dropdowns
     cols = st.columns(3)
     for i, assumption in enumerate(assumptions_data):
         with cols[i % 3]:
@@ -100,14 +94,14 @@ def tab5_view(df_schools):
             </div>
             """, unsafe_allow_html=True)
             
-            with st.expander("What does this mean?", expanded=False):
-                st.markdown(assumption['explanation'])
+            if st.button(f"Learn more about {assumption['title'].split(':')[0]}", key=f"assumption_{i}"):
+                st.info(assumption['explanation'])
 
     # --- Interactive Learning Section ---
     st.markdown("---")
-    with st.expander("Try This: Herd Immunity Calculator", expanded=False):
+    if st.expander("Try This: Herd Immunity Calculator", expanded=False):
         st.markdown("**Calculate the vaccination rate needed for herd immunity:**")
-        herd_immunity_threshold = (1 - 1/12) * 100  # (1 - 1/R₀) × 100
+        herd_immunity_threshold = (1 - 1/12) * 100
         st.markdown(f"""
         With R₀ = 12, we need **{herd_immunity_threshold:.1f}%** of the population vaccinated to achieve herd immunity.
         
@@ -133,7 +127,7 @@ def tab5_view(df_schools):
 
     susceptible = enrollment * (1 - immune)
     
-    # Enhanced School Details with explanatory dropdowns
+    # Enhanced School Details with clean explanations
     st.markdown(f"""
     <div style='text-align:center; margin-bottom:1em;'>
       <h2 style='margin-bottom:0.3em;'>School Details</h2>
@@ -148,8 +142,8 @@ def tab5_view(df_schools):
           <strong>Total Students:</strong><br>{enrollment:,}
         </div>
         """, unsafe_allow_html=True)
-        with st.expander("What does this mean?", expanded=False):
-            st.markdown("This is the total number of kindergarten students enrolled at the school. Kindergarten students are often used in outbreak modeling because they have the most recent vaccination data and spend lots of time in close contact.")
+        if st.button("Learn about Total Students", key="total_students"):
+            st.info("This is the total number of kindergarten students enrolled at the school. Kindergarten students are often used in outbreak modeling because they have the most recent vaccination data and spend lots of time in close contact.")
     
     with detail_cols[1]:
         st.markdown(f"""
@@ -157,12 +151,12 @@ def tab5_view(df_schools):
           <strong>MMR Coverage:</strong><br>{immune*100:.1f}%
         </div>
         """, unsafe_allow_html=True)
-        with st.expander("What does this mean?", expanded=False):
+        if st.button("Learn about MMR Coverage", key="mmr_coverage"):
             status = 'Above herd immunity threshold' if immune >= 0.917 else 'Below herd immunity threshold'
-            st.markdown(f"""
+            st.info(f"""
             This is the percentage of students who are immune to measles (usually through vaccination). 
             
-            **Current status**: {status}
+            Current status: {status}
             
             Arizona requires 95% MMR coverage, but allows exemptions for medical, religious, or personal beliefs.
             """)
@@ -173,12 +167,12 @@ def tab5_view(df_schools):
           <strong>Susceptible Students:</strong><br>{int(susceptible):,}
         </div>
         """, unsafe_allow_html=True)
-        with st.expander("What does this mean?", expanded=False):
+        if st.button("Learn about Susceptible Students", key="susceptible_students"):
             risk_level = 'Low risk' if susceptible < enrollment * 0.1 else 'Moderate risk' if susceptible < enrollment * 0.2 else 'High risk'
-            st.markdown(f"""
+            st.info(f"""
             These are students who could get measles if exposed - calculated as: Total Students × (1 - Vaccination Rate)
             
-            **Risk level**: {risk_level}
+            Risk level: {risk_level}
             
             The more susceptible students, the faster and larger an outbreak can become.
             """)
@@ -229,12 +223,11 @@ def tab5_view(df_schools):
         )
     ])
     
-    # Fixed y-axis at 20 as requested
     fig.update_layout(
         xaxis=dict(title="Days since Introduction", showgrid=False),
-        yaxis=dict(title="Daily New Cases (students)", showgrid=False, range=[0, 20]),
+        yaxis=dict(title="Daily New Cases (students)", showgrid=False, range=[0, 15]),
         plot_bgcolor='rgba(0,0,0,0)',
-        margin=dict(t=20, b=0)
+        margin=dict(t=15, b=0)
     )
     
     st.plotly_chart(fig, use_container_width=True, config={"responsive": True})
@@ -246,7 +239,7 @@ def tab5_view(df_schools):
     """)
 
     # --- Interactive Timeline ---
-    with st.expander("Interactive Disease Timeline", expanded=False):
+    if st.expander("Interactive Disease Timeline", expanded=False):
         timeline_day = st.slider("Explore the timeline: Day", 0, 30, 0)
         stage_description = (
             "The outbreak is just beginning. Most students are still susceptible." if timeline_day < 5 else
@@ -274,7 +267,6 @@ def tab5_view(df_schools):
         curr += timedelta(days=1)
     exclusion_days = set(school_days[:q_days])
     
-    # Fixed-width container for calendar
     cal_html = "<div style='max-width:680px; margin:auto;'><table style='width:100%; text-align:center; border-collapse:collapse;'><tr>"
     cal_html += ''.join(
         f"<th style='padding:6px;border-bottom:1px solid#ccc'>{wd}</th>" for wd in ['Mon','Tue','Wed','Thu','Fri']
@@ -306,11 +298,10 @@ def tab5_view(df_schools):
     This calendar shows the next 30 school weekdays with shaded cells marking quarantine days. The dark cells represent days when unvaccinated students would be excluded from school.
     """)
 
-    # --- Enhanced Outbreak Summary with Explanatory Dropdowns ---
+    # --- Enhanced Outbreak Summary with Clean Explanations ---
     st.markdown("---")
     st.markdown("<h2 style='text-align:center; margin:0.75em 0 0.5em;'>Outbreak Summary</h2>", unsafe_allow_html=True)
     
-    # Create the summary cards
     summary_data = [
         {
             "title": "Total Infected",
@@ -363,12 +354,12 @@ def tab5_view(df_schools):
             </div>
             """, unsafe_allow_html=True)
             
-            with st.expander(f"Understanding {item['title']}", expanded=False):
-                st.markdown(item['explanation'])
+            if st.button(f"Learn about {item['title']}", key=f"summary_{i}"):
+                st.info(item['explanation'])
 
     # --- Educational Comparison Tool ---
     st.markdown("---")
-    with st.expander("Compare Different Scenarios", expanded=False):
+    if st.expander("Compare Different Scenarios", expanded=False):
         st.markdown("**See how vaccination rates affect outbreak size:**")
         
         comparison_rates = [0.70, 0.85, 0.92, 0.95]
