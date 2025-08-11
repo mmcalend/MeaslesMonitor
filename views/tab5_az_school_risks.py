@@ -1,15 +1,4 @@
-summary_data = [
-        {
-            "title": "Total Infected",
-            "value": f"{int(total_cases):,}",
-            "percentage": f"({total_cases/enrollment*100:.1f}% of school)",
-            "bg_color": "#440154"
-        },
-        {
-            "title": "Hospitalizations",
-            "value": f"{int(total_cases*hosp_rate):,}",
-            "percentage": f"({hosp_rate*100:.0f}% of cases)",
-            "bg_color": "#482import streamlit as st
+import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
@@ -29,7 +18,7 @@ def tab5_view(df_schools):
     """, unsafe_allow_html=True)
 
     # Educational context section with enhanced content
-    if st.expander("Understanding Disease Transmission (Click to Learn More)", expanded=False):
+    if st.expander("🦠 Understanding Disease Transmission (Click to Learn More)", expanded=False):
         st.markdown("""
         **Why is measles so contagious?**
         
@@ -50,7 +39,7 @@ def tab5_view(df_schools):
         """)
 
     # Add educational quiz section
-    if st.expander("Test Your Knowledge", expanded=False):
+    if st.expander("📚 Test Your Knowledge", expanded=False):
         st.markdown("**Quick Quiz: How well do you understand measles?**")
         
         quiz_col1, quiz_col2 = st.columns(2)
@@ -58,17 +47,17 @@ def tab5_view(df_schools):
             q1 = st.radio("How long can measles virus survive in the air?", 
                          ["30 minutes", "2 hours", "24 hours"], key="quiz1")
             if q1 == "2 hours":
-                st.success("Correct! Measles can survive in the air for up to 2 hours.")
+                st.success("✅ Correct! Measles can survive in the air for up to 2 hours.")
             elif q1:
-                st.error("Incorrect. Measles can survive in the air for up to 2 hours.")
+                st.error("❌ Incorrect. Measles can survive in the air for up to 2 hours.")
         
         with quiz_col2:
             q2 = st.radio("What percentage of people need to be vaccinated for herd immunity?", 
                          ["75%", "85%", "92%"], key="quiz2")
             if q2 == "92%":
-                st.success("Correct! About 92% vaccination rate is needed for measles herd immunity.")
+                st.success("✅ Correct! About 92% vaccination rate is needed for measles herd immunity.")
             elif q2:
-                st.error("Incorrect. About 92% vaccination rate is needed for herd immunity.")
+                st.error("❌ Incorrect. About 92% vaccination rate is needed for herd immunity.")
 
     st.markdown("""
     <div style='text-align:center; margin-bottom:1em;'>
@@ -76,13 +65,13 @@ def tab5_view(df_schools):
     </div>
     """, unsafe_allow_html=True)
 
-    # --- Enhanced Assumptions with Clean Expandables ---
+    # --- Enhanced Assumptions with Buttons (no session state needed) ---
     assumptions_data = [
         {
             "title": "R₀: 12",
             "link": "https://pubmed.ncbi.nlm.nih.gov/28757186/",
             "link_text": "PubMed",
-            "bg_color": "#440154",
+            "bg_color": "#2f2e41",
             "key": "r0",
             "explanation": "R₀ (R-naught) is the basic reproduction number - how many people one infected person will infect on average in a completely susceptible population. Measles has an R₀ of 12, making it one of the most contagious diseases. For comparison: COVID-19 original strain ≈ 2-3, Seasonal flu ≈ 1.3, Chickenpox ≈ 10-12."
         },
@@ -90,7 +79,7 @@ def tab5_view(df_schools):
             "title": "MMR Rate: ADHS 2024–25",
             "link": "https://www.azdhs.gov/preparedness/epidemiology-disease-control/immunization/#reports-immunization-coverage",
             "link_text": "ADHS",
-            "bg_color": "#482677",
+            "bg_color": "#3d3c5a",
             "key": "mmr",
             "explanation": "MMR (Measles, Mumps, Rubella) vaccination rate for kindergarten students in Arizona. The MMR vaccine is about 97% effective after two doses. Arizona requires this data to be reported annually by schools. The state requires 95% coverage but allows medical, religious, and personal belief exemptions."
         },
@@ -98,7 +87,7 @@ def tab5_view(df_schools):
             "title": "Hospitalization Rate: 20%",
             "link": "https://www.nfid.org/infectious-disease/measles/",
             "link_text": "NFID",
-            "bg_color": "#453781",
+            "bg_color": "#47465c",
             "key": "hosp",
             "explanation": "About 1 in 5 people with measles need hospital care. Complications can include pneumonia (lung infection), brain swelling (encephalitis), and severe diarrhea. Children under 5 and adults over 20 are at highest risk for complications. Pneumonia is the most common cause of death in young children."
         },
@@ -106,7 +95,7 @@ def tab5_view(df_schools):
             "title": "Death Rate: 0.03%",
             "link": "https://www.uchicagomedicine.org/forefront/pediatrics-articles/measles-is-still-a-very-dangerous-disease",
             "link_text": "UChicago",
-            "bg_color": "#3f4788",
+            "bg_color": "#4e4d6b",
             "key": "death",
             "explanation": "While rare in developed countries with good healthcare, measles can be fatal. Deaths usually occur from complications like pneumonia or brain swelling (encephalitis). The death rate is higher in children under 5 (1 in 1,000) and adults over 20. Before vaccines, measles killed 400-500 children annually in the US."
         },
@@ -114,7 +103,7 @@ def tab5_view(df_schools):
             "title": "Isolation: 4 days",
             "link": "https://www.azdhs.gov/documents/preparedness/epidemiology-disease-control/infectious-disease-epidemiology/school-childcare/measles-protocol.pdf",
             "link_text": "Protocol",
-            "bg_color": "#35568c",
+            "bg_color": "#5A4E7A",
             "key": "isolation",
             "explanation": "People with measles must stay home from 4 days before the rash appears until 4 days after the rash appears. This is when they're most contagious. The rash typically appears 2-3 days after symptoms begin. People are most contagious 2-3 days before symptoms start, when they don't even know they're sick!"
         },
@@ -122,30 +111,31 @@ def tab5_view(df_schools):
             "title": "Quarantine: 21 days",
             "link": "https://www.azdhs.gov/documents/preparedness/epidemiology-disease-control/infectious-disease-epidemiology/school-childcare/mmr-guidance.pdf",
             "link_text": "ADHS",
-            "bg_color": "#2d6490",
+            "bg_color": "#6d6b85",
             "key": "quarantine",
             "explanation": "Unvaccinated people exposed to measles must be excluded from school for 21 days after their last exposure (the measles incubation period). This prevents them from spreading the disease if they become infected, since symptoms can take up to 21 days to appear. This is a precautionary measure even if they never develop symptoms."
         }
     ]
 
-    # Display assumptions with immediate info display
+    # Display assumptions with immediate info display (no buttons needed)
     cols = st.columns(3)
     for i, assumption in enumerate(assumptions_data):
         with cols[i % 3]:
-            st.markdown(f"""
-            <div style='background:{assumption["bg_color"]}; color:white; padding:1rem; border-radius:10px; margin-bottom:0.5rem;'>
-              <strong>{assumption["title"]}</strong><br>
-              <a href="{assumption["link"]}" target="_blank" style="color:#a5c9ff;">{assumption["link_text"]}</a>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Show explanation in expandable section
-            with st.expander(f"About {assumption['title'].split(':')[0]}"):
-                st.write(assumption['explanation'])
+            with st.container():
+                st.markdown(f"""
+                <div style='background:{assumption["bg_color"]}; color:white; padding:1rem; border-radius:10px; margin-bottom:0.5rem;'>
+                  <strong>{assumption["title"]}</strong><br>
+                  <a href="{assumption["link"]}" target="_blank" style="color:#a5c9ff;">{assumption["link_text"]}</a>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Show explanation in expandable section
+                with st.expander(f"ℹ️ About {assumption['title'].split(':')[0]}"):
+                    st.write(assumption['explanation'])
 
     # --- Interactive Learning Section ---
     st.markdown("---")
-    if st.expander("Try This: Herd Immunity Calculator", expanded=False):
+    if st.expander("🧮 Try This: Herd Immunity Calculator", expanded=False):
         st.markdown("**Calculate the vaccination rate needed for herd immunity:**")
         
         # Interactive R0 slider
@@ -168,7 +158,7 @@ def tab5_view(df_schools):
         """)
 
     # Add real-world context section
-    if st.expander("Real-World Measles Outbreaks", expanded=False):
+    if st.expander("🌍 Real-World Measles Outbreaks", expanded=False):
         st.markdown("""
         **Recent Arizona Measles Cases:**
         - 2024: Several cases linked to international travel
@@ -262,9 +252,9 @@ def tab5_view(df_schools):
 
     # Show vaccination impact with visual indicators
     if immune < 0.917:
-        st.error("Below Herd Immunity Threshold: With vaccination rates below 91.7%, this school community is vulnerable to measles outbreaks. Even a single case could lead to widespread transmission.")
+        st.error("⚠️ **Below Herd Immunity Threshold:** With vaccination rates below 91.7%, this school community is vulnerable to measles outbreaks. Even a single case could lead to widespread transmission.")
     else:
-        st.success("Above Herd Immunity Threshold: This school has strong community protection! High vaccination rates make large outbreaks unlikely.")
+        st.success("✅ **Above Herd Immunity Threshold:** This school has strong community protection! High vaccination rates make large outbreaks unlikely.")
 
     # --- Simulation Calculations ---
     R0 = 12
@@ -335,24 +325,24 @@ def tab5_view(df_schools):
     """)
 
     # --- Interactive Timeline ---
-    if st.expander("Interactive Disease Timeline", expanded=False):
+    if st.expander("📅 Interactive Disease Timeline", expanded=False):
         timeline_day = st.slider("Explore the timeline: Day", 0, 30, 0)
         cumulative_cases = np.cumsum(daily)[timeline_day] if timeline_day < len(daily) else total_cases
         remaining_susceptible = max(0, susceptible - cumulative_cases)
         
         stage_description = (
-            "The outbreak is just beginning. Most students are still susceptible." if timeline_day < 5 else
-            "Cases are rising rapidly as the virus spreads through the school." if timeline_day < 15 else
-            "The outbreak is peaking. Many susceptible students have been exposed." if timeline_day < 25 else
-            "The outbreak is winding down. Few susceptible students remain."
+            "🟢 The outbreak is just beginning. Most students are still susceptible." if timeline_day < 5 else
+            "🟡 Cases are rising rapidly as the virus spreads through the school." if timeline_day < 15 else
+            "🔴 The outbreak is peaking. Many susceptible students have been exposed." if timeline_day < 25 else
+            "🟢 The outbreak is winding down. Few susceptible students remain."
         )
         
         st.markdown(f"""
         **Day {timeline_day} Summary:**
-        - New cases today: **{daily[timeline_day]:.1f} students**
-        - Total cases so far: **{cumulative_cases:.0f} students**
-        - Remaining susceptible: **{remaining_susceptible:.0f} students**
-        - Students in quarantine: **{int(remaining_susceptible):.0f} students**
+        - 📈 New cases today: **{daily[timeline_day]:.1f} students**
+        - 📊 Total cases so far: **{cumulative_cases:.0f} students**
+        - 👥 Remaining susceptible: **{remaining_susceptible:.0f} students**
+        - 📚 Students in quarantine: **{int(remaining_susceptible):.0f} students**
         
         **What's happening?** {stage_description}
         """)
