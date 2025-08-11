@@ -6,6 +6,17 @@ import plotly.graph_objects as go
 from datetime import datetime, timedelta
 
 def tab5_view(df_schools):
+    # --- Custom CSS for better styling ---
+    st.markdown("""
+    <style>
+    .info-dropdown {
+        margin-top: 5px;
+        font-size: 0.85rem;
+        line-height: 1.4;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     # --- Header & Educational Introduction ---
     st.markdown("""
     <div style='text-align:center; margin-bottom:1.5em;'>
@@ -368,6 +379,7 @@ def tab5_view(df_schools):
             
             with st.expander(f"Understanding {item['title']}"):
                 st.markdown(item['explanation'])
+
 
 
     # --- Disclaimer ---
