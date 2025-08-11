@@ -100,8 +100,8 @@ def tab5_view(df_schools):
             </div>
             """, unsafe_allow_html=True)
             
-            with st.expander("What does this mean?"):
-                st.write(assumption['explanation'])
+            with st.expander("What does this mean?", expanded=False):
+                st.markdown(assumption['explanation'])
 
     # --- Interactive Learning Section ---
     st.markdown("---")
@@ -148,8 +148,8 @@ def tab5_view(df_schools):
           <strong>Total Students:</strong><br>{enrollment:,}
         </div>
         """, unsafe_allow_html=True)
-        with st.expander("What does this mean?"):
-            st.write("This is the total number of kindergarten students enrolled at the school. Kindergarten students are often used in outbreak modeling because they have the most recent vaccination data and spend lots of time in close contact.")
+        with st.expander("What does this mean?", expanded=False):
+            st.markdown("This is the total number of kindergarten students enrolled at the school. Kindergarten students are often used in outbreak modeling because they have the most recent vaccination data and spend lots of time in close contact.")
     
     with detail_cols[1]:
         st.markdown(f"""
@@ -157,9 +157,9 @@ def tab5_view(df_schools):
           <strong>MMR Coverage:</strong><br>{immune*100:.1f}%
         </div>
         """, unsafe_allow_html=True)
-        with st.expander("What does this mean?"):
+        with st.expander("What does this mean?", expanded=False):
             status = 'Above herd immunity threshold' if immune >= 0.917 else 'Below herd immunity threshold'
-            st.write(f"""
+            st.markdown(f"""
             This is the percentage of students who are immune to measles (usually through vaccination). 
             
             **Current status**: {status}
@@ -173,9 +173,9 @@ def tab5_view(df_schools):
           <strong>Susceptible Students:</strong><br>{int(susceptible):,}
         </div>
         """, unsafe_allow_html=True)
-        with st.expander("What does this mean?"):
+        with st.expander("What does this mean?", expanded=False):
             risk_level = 'Low risk' if susceptible < enrollment * 0.1 else 'Moderate risk' if susceptible < enrollment * 0.2 else 'High risk'
-            st.write(f"""
+            st.markdown(f"""
             These are students who could get measles if exposed - calculated as: Total Students × (1 - Vaccination Rate)
             
             **Risk level**: {risk_level}
@@ -363,8 +363,8 @@ def tab5_view(df_schools):
             </div>
             """, unsafe_allow_html=True)
             
-            with st.expander(f"Understanding {item['title']}"):
-                st.write(item['explanation'])
+            with st.expander(f"Understanding {item['title']}", expanded=False):
+                st.markdown(item['explanation'])
 
     # --- Educational Comparison Tool ---
     st.markdown("---")
