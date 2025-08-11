@@ -31,16 +31,16 @@ def normalize(d):
 
 def custom_expander(title, content_md, open=False):
     """
-    Custom collapsible section to replace st.expander and avoid duplicate heading bug.
+    Custom collapsible section with transparent background.
     """
     open_attr = "open" if open else ""
     html = f"""
     <details {open_attr} style="
         margin-bottom:1rem;
-        background-color:#1e1e1e;
+        background-color:transparent;
         border-radius:8px;
-        padding:0.5rem;
-        border: 1px solid #555;
+        padding:0.25rem;
+        border: none;
     ">
       <summary style="
           font-weight:bold;
@@ -54,3 +54,4 @@ def custom_expander(title, content_md, open=False):
     </details>
     """
     st.markdown(html, unsafe_allow_html=True)
+
