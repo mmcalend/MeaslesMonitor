@@ -125,7 +125,7 @@ def tab5_view(df_schools: pd.DataFrame):
 
 
     # --- People (stick figure) chart using charts.py ---
-      fig_people, per_unit = people_outcomes_chart(
+    fig_people, per_unit = people_outcomes_chart(
         enrollment=enrollment,
         immune_rate=immune,
         infected=total_cases,
