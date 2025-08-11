@@ -26,14 +26,11 @@ def load_all_data():
         "https://raw.githubusercontent.com/mmcalend/USMeaslesData/refs/heads/main/24-25ADHSMMRKCoverage.csv"
     )
 
-    try:
-        df_us_cdc = pd.read_csv(
-            "https://raw.githubusercontent.com/mmcalend/USMeaslesData/refs/heads/main/CDC_US_WeeklyRashOnset.csv",
-            parse_dates=["mmwr_week_start"]
-        )
-    except Exception:
-        df_us_cdc = pd.DataFrame(columns=["mmwr_week_start", "cases"])
+    df_cdc_us = pd.read_csv(
+        "https://raw.githubusercontent.com/mmcalend/USMeaslesData/refs/heads/main/CDC_US_WeeklyRashOnset.csv",
+        parse_dates=["mmwr_week_start"]
+    )
 
-    return df, df19, dfdetails, mmr, df_schools, df_us_cdc
+    return df, df19, dfdetails, mmr, df_schools, df_cdc_us
 
 
