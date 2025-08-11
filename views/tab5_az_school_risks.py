@@ -123,13 +123,15 @@ def tab5_view(df_schools: pd.DataFrame):
     quarantine_missed = noninfected * q_days
     total_days_missed = isolate_missed + quarantine_missed
 
-    # --- People (waffle) chart using charts.py, with a Start Outbreak button inside the chart ---
+
+    # --- People (stick figure) chart using charts.py ---
     fig_people, per_unit = people_outcomes_chart(
         enrollment=enrollment,
         immune_rate=immune,
         infected=total_cases,
         hosp_rate=hosp_rate,
-        death_rate=death_rate
+        death_rate=death_rate,
+        style="stick" 
     )
     st.plotly_chart(fig_people, use_container_width=True, config={"responsive": True})
 
