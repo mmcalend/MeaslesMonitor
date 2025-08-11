@@ -52,7 +52,7 @@ df_schools["IMMUNE_MMR"] = df_schools["IMMUNE_MMR"].clip(0, 1)
 df_schools["Susceptible"] = df_schools["ENROLLED"] * (1 - df_schools["IMMUNE_MMR"])
 
 PAGES = {
-    "Case Trajectory": lambda: tab1_case_trajectory.tab1_view(df, df_us_cdc=df_us_cdc),
+    "Case Trajectory": lambda: tab1_case_trajectory.tab1_view(df, df_us_cdc),
     "Outbreak Map": lambda: tab2_outbreak_map.tab2_view(df),
     "Then vs. Now": lambda: tab3_then_vs_now.tab3_view(df, df19, mmr),
     "Demographics": lambda: tab4_demographic_lens.tab4_view(dfdetails),
