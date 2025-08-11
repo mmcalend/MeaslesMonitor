@@ -10,12 +10,12 @@ def tab5_view(df_schools):
     # -------------------------
     # Title & Introduction
     # -------------------------
-    st.markdown(f"""
+    st.markdown("""
     <div style='text-align:center; margin-bottom:1.5em;'>
       <h1>Arizona Measles Outbreak Simulator</h1>
       <p style='font-size:1.1rem; max-width:700px; margin:auto;'>
-        Estimate measles' potential impact on school communities: infections, hospitalizations, absences, and more.<br>
-        <em>Note: Schools with fewer than 20 kindergarten students are excluded.</em>
+        Estimate the impact of measles on school communities, including infections, hospitalizations, absences, and more.<br>
+        <em>Note: Schools with fewer than 20 kindergarten students are excluded from the selection list.</em>
       </p>
     </div>
     """, unsafe_allow_html=True)
@@ -23,24 +23,23 @@ def tab5_view(df_schools):
     # -------------------------
     # Educational Context
     # -------------------------
-    with st.expander("Understanding Disease Transmission", expanded=False):
+    with st.expander("Understanding Disease Transmission (Click to Learn More)", expanded=False):
         st.markdown("""
         **Why is measles so contagious?**
-        - Remains airborne for up to 2 hours  
-        - High reproduction number (R₀)  
-        - Immunity rates drive outbreak dynamics  
-        ...
+        Measles remains airborne for up to 2 hours. Immunity and reproduction number (R₀) explain infection dynamics...
         """)
 
     with st.expander("Test Your Knowledge", expanded=False):
-        st.markdown("**Quick Quiz: How well do you understand measles?**")
-        # quiz code here
+        st.markdown("""
+        **Quick Quiz: How well do you understand measles?**  
+        *(Quiz code goes here — restored from original)*
+        """)
 
     # -------------------------
     # Assumptions
     # -------------------------
     st.markdown("<h2 style='text-align:center;'>Scientific Assumptions & Data Sources</h2>", unsafe_allow_html=True)
-    cols = st.columns(3)
+
     assumptions_data = [
         {"title": "R₀: 12", "link": "...", "link_text": "PubMed", "explanation": "..."},
         {"title": "MMR Rate: ADHS 2024–25", "link": "...", "link_text": "ADHS", "explanation": "..."},
@@ -49,10 +48,12 @@ def tab5_view(df_schools):
         {"title": "Isolation: 4 days", "link": "...", "link_text": "Protocol", "explanation": "..."},
         {"title": "Quarantine: 21 days", "link": "...", "link_text": "ADHS", "explanation": "..."}
     ]
+
+    cols = st.columns(3)
     for i, assumption in enumerate(assumptions_data):
         with cols[i % 3]:
             st.markdown(f"""
-            <div style='background:{colors[i % len(colors)]}; color:white; padding:1rem; border-radius:10px; margin-bottom:0.5rem;'>
+            <div style='background:{colors[i % len(colors)]}; color:white; padding:1rem; border-radius:10px; margin-bottom:0.5rem; min-height:90px;'>
               <strong>{assumption["title"]}</strong><br>
               <a href="{assumption["link"]}" target="_blank" style="color:#a5c9ff;">{assumption["link_text"]}</a>
             </div>
@@ -65,8 +66,8 @@ def tab5_view(df_schools):
     # -------------------------
     with st.expander("Herd Immunity Calculator", expanded=False):
         r0_slider = st.slider("Adjust R₀", 2, 18, 12)
-        herd_threshold = (1 - 1/r0_slider) * 100
-        st.markdown(f"With R₀ = {r0_slider}, we need **{herd_threshold:.1f}%** vaccinated.")
+        herd_immunity_threshold = (1 - 1/r0_slider) * 100
+        st.markdown(f"With R₀ = {r0_slider}, we need **{herd_immunity_threshold:.1f}%** vaccinated.")
 
     # -------------------------
     # Outbreak History
@@ -74,16 +75,16 @@ def tab5_view(df_schools):
     with st.expander("Real-World Measles Outbreaks", expanded=False):
         st.markdown("""
         **Recent Arizona Cases:**  
-        - 2024: travel-linked  
-        - 2019: Pinal County, 9 cases  
-        - 2008: 7 cases  
+        - 2024 (travel-linked)  
+        - 2019 (Pinal County, 9 cases)  
+        - 2008 (7 cases)  
         ...
         """)
 
     # -------------------------
     # Simulation Mode Selection
     # -------------------------
-    st.markdown("<h2 style='text-align:center;'>Simulation Setup</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center;'>Choose Simulation Mode</h2>", unsafe_allow_html=True)
     mode = st.radio("", ["Select a School", "Enter Custom Values"], horizontal=True)
 
     if mode == "Select a School":
@@ -100,22 +101,32 @@ def tab5_view(df_schools):
     susceptible = enrollment * (1 - immune)
 
     # -------------------------
-    # Key School Stats
+    # School Details
     # -------------------------
     st.markdown("<h2 style='text-align:center;'>School Details</h2>", unsafe_allow_html=True)
-    stat_cols = st.columns(3)
+    detail_cols = st.columns(3)
     stats_data = [
         {"label": "Total Students", "value": f"{enrollment:,}"},
         {"label": "MMR Coverage", "value": f"{immune*100:.1f}%"},
         {"label": "Susceptible Students", "value": f"{int(susceptible):,}"}
     ]
     for i, stat in enumerate(stats_data):
-        with stat_cols[i]:
+        with detail_cols[i]:
             st.markdown(f"""
             <div style='background:{colors[i]}; color:white; padding:0.8rem; border-radius:8px; text-align:center;'>
               <strong>{stat["label"]}</strong><br>{stat["value"]}
             </div>
             """, unsafe_allow_html=True)
+            if stat["label"] == "Total Students":
+                with st.expander("More about total students"):
+                    st.write("Total kindergarten enrollment...")
+            elif stat["label"] == "MMR Coverage":
+                with st.expander("More about MMR coverage"):
+                    status = 'Above herd immunity threshold' if immune >= 0.917 else 'Below herd immunity threshold'
+                    st.write(f"**Current status:** {status}")
+            else:
+                with st.expander("More about susceptible students"):
+                    st.write("Students potentially at risk of infection...")
 
     if immune < 0.917:
         st.error("Below Herd Immunity Threshold: vulnerable to outbreaks.")
@@ -141,7 +152,9 @@ def tab5_view(df_schools):
     quarantine_missed = noninfected * q_days
     total_days_missed = isolate_missed + quarantine_missed
 
-    # Daily curve
+    # -------------------------
+    # Epidemic Curve
+    # -------------------------
     days = np.arange(0, 90)
     dist = (days**5) * np.exp(-days / 2)
     dist /= dist.sum()
@@ -165,6 +178,7 @@ def tab5_view(df_schools):
         plot_bgcolor='rgba(0,0,0,0)',
         margin=dict(t=15, b=0)
     )
+
     st.markdown("<h2 style='text-align:center;'>Estimated Daily Cases</h2>", unsafe_allow_html=True)
     st.plotly_chart(fig, use_container_width=True)
     st.markdown(f"Outbreak peaks around **Day {peak_day}** with **{peak_cases:.1f} new cases**.")
@@ -185,7 +199,7 @@ def tab5_view(df_schools):
     for i, item in enumerate(summary_data):
         with cols_summary[i % 3]:
             st.markdown(f"""
-            <div style='background:{colors[i]}; color:white; padding:1rem; border-radius:8px; text-align:center; margin-bottom:0.5rem;'>
+            <div style='background:{colors[i]}; color:white; padding:1rem; border-radius:8px; text-align:center; margin-bottom:0.5rem; min-height:100px;'>
               <strong>{item["title"]}</strong><br>
               <span style='font-size:1.2em;'>{item["value"]}</span><br>
               <small>{item["percentage"]}</small>
@@ -218,10 +232,9 @@ def tab5_view(df_schools):
     # -------------------------
     with st.expander("Prevention & What You Can Do", expanded=False):
         st.markdown("""
-        - Get vaccinated  
+        - Get Vaccinated  
         - Support strong school policies  
-        - Share accurate info  
-        ...
+        - Share accurate info...
         """)
     with st.expander("Additional Resources", expanded=False):
         st.markdown("""
@@ -241,4 +254,3 @@ def tab5_view(df_schools):
     **Educational Disclaimer:** This simulator uses simplified models and assumptions.  
     Outcomes are estimates and should not replace public health guidance.
     """)
-
