@@ -52,7 +52,8 @@ def tab1_view(df, df_cdc_us):
         <a href='https://github.com/CSSEGISandData/measles_data' target='_blank'>JHU Measles Tracking Team</a> (State Level) 
     </div>
     """, unsafe_allow_html=True)
-      st.markdown("""
+    
+    st.markdown("""
     <div style='font-size: 0.8rem; font-style: italic;'>
         Note: Differences between the CDC and JHU counts can occur due to reporting delays, 
         aggregation methods, and case definition criteria.
