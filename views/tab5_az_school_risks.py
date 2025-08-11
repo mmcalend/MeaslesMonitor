@@ -1,16 +1,5 @@
 # views/tab5_az_school_risks.py
-"""
-Arizona School Risks — simplified, plain-language Tab 5
-
-Flow:
-  1) Choose scenario
-  2) Results at a glance
-  3) Visualize (People view or Epi curve)
-  4) Calendar
-  5) Assumptions & notes
-
-Kept your color/font scheme, calendar, and avoided emojis.
-"""
+# (Python 3.9+ compatible; with “What if we raise MMR?” + tooltips; no exports)
 from datetime import datetime, timedelta
 
 import numpy as np
@@ -30,9 +19,13 @@ EPI_Y_MAX        = 100
 
 
 # ----------------- Small helpers -----------------
-def _final_size_attack_rate(r0: float, susceptible_share: float, iters: int = 60) -> float:
-    """Approximate final attack rate using fixed-point iteration of the SIR final-size relation.
-    Returns a fraction between 0 and 1 over susceptibles."""
+def _final_size_attack_rate(r0, susceptible_share, iters=60):
+    """Approximate final attack rate (share of susceptibles infected) via fixed-point iteration."""
+    try:
+        r0 = float(r0)
+        susceptible_share = float(susceptible_share)
+    except Exception:
+        return 0.0
     if susceptible_share <= 0 or r0 <= 0:
         return 0.0
     z = 1e-4
@@ -41,7 +34,7 @@ def _final_size_attack_rate(r0: float, susceptible_share: float, iters: int = 60
     return float(max(0.0, min(1.0, z)))
 
 
-def _build_school_days(n_days: int = 30):
+def _build_school_days(n_days=30):
     """Return next n school *weekdays* (Mon–Fri) starting today."""
     days, curr = [], datetime.today().date()
     while len(days) < n_days:
@@ -51,16 +44,15 @@ def _build_school_days(n_days: int = 30):
     return days
 
 
-def _calendar_html(school_days, exclusion_days: set):
-    # We keep the calendar HTML to preserve your look.
+def _calendar_html(school_days, exclusion_days):
     header = ''.join(
-        f"<th style='padding:6px;border-bottom:1px solid #eee'>{wd}</th>"
+        "<th style='padding:6px;border-bottom:1px solid #eee'>{}</th>".format(wd)
         for wd in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
     )
     html = [
         "<div style='max-width:680px;margin:auto;'>",
         "<table style='width:100%;text-align:center;border-collapse:collapse;'>",
-        f"<tr>{header}</tr>",
+        "<tr>{}</tr>".format(header),
     ]
     i = 0
     while i < len(school_days):
@@ -76,8 +68,9 @@ def _calendar_html(school_days, exclusion_days: set):
             bg = "#6A4C93" if shaded else "#f7f7f7"
             fg = "white" if shaded else "#333"
             week.append(
-                f"<td style='padding:12px;border:1px solid #eee;background:{bg};"
-                f"color:{fg};border-radius:4px'>{d.strftime('%b %d')}</td>"
+                "<td style='padding:12px;border:1px solid #eee;background:{};color:{};border-radius:4px'>{}</td>".format(
+                    bg, fg, d.strftime('%b %d')
+                )
             )
             i += 1
         week.append("</tr>")
@@ -145,7 +138,7 @@ def render(df_schools: pd.DataFrame):
     susceptible_plus = enrollment * (1 - immune_plus)
 
     # -------- Core math --------
-    s_share = susceptible / enrollment if enrollment else 0.0
+    s_share = (susceptible / enrollment) if enrollment else 0.0
     attack_over_sus = _final_size_attack_rate(R0, s_share)
     total_infected = attack_over_sus * susceptible
     hospitalized = total_infected * HOSP_RATE
@@ -191,14 +184,14 @@ def render(df_schools: pd.DataFrame):
 
     view = st.radio("View", ["People view", "Epi curve"], horizontal=True, label_visibility="collapsed")
     if view == "People view":
-        fig_people, per_unit = people_outcomes_chart(
+        fig_people, _ = people_outcomes_chart(
             enrollment=enrollment,
             immune_rate=immune,
             infected=total_infected,
             hosp_rate=HOSP_RATE,
             death_rate=DEATH_RATE,
             per_unit=None,
-            style="heads",            # circles only
+            style="heads",
             show_background=True,
         )
         st.plotly_chart(fig_people, use_container_width=True)
@@ -237,10 +230,6 @@ def render(df_schools: pd.DataFrame):
             """
         )
         st.info("For real-world guidance, consult ADHS and your local health authority.")
-
-
-def tab5_view(df_schools: pd.DataFrame):
-    render(df_schools)
 
 
 def tab5_view(df_schools: pd.DataFrame):
