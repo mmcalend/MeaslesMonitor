@@ -149,6 +149,8 @@ def stacked_bar_chart(data, title, colors):
     return fig
 
 
+
+
 def people_outcomes_chart(
     enrollment,
     immune_rate,
@@ -156,8 +158,9 @@ def people_outcomes_chart(
     hosp_rate,
     death_rate,
     per_unit=None,
-    style="heads",                
-    show_background=False          
+    style="heads",                # NEW default: circles as heads
+    show_background=True          # NEW: faint school backdrop with shapes
+):
     """
     Returns (fig, per_unit).
     style options: "heads" (circles), "square" (waffle), or "emoji" (🧍).
@@ -365,3 +368,4 @@ def epi_curve_chart(daily_counts, y_max=100):
         )],
     )
     return fig
+
