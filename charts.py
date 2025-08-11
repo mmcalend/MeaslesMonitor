@@ -1,5 +1,6 @@
 import plotly.graph_objects as go
 import math
+import plotly.express as px
 
 def proportional_pictogram_bar(data, title, total_cases=None, icon_size=16, icons_per_row=10, colors=None, show_counts_for=None):
     total_icons = 100
@@ -144,17 +145,17 @@ def stacked_bar_chart(data, title, colors):
     )
     return fig
 
-
-import plotly.graph_objects as go
-import math
-
-def people_outcomes_chart(enrollment, immune_rate, infected, hosp_rate, death_rate, per_unit=None):
+def people_outcomes_chart(enrollment, immune_rate, infected, hosp_rate, death_rate, per_unit=None, style="square"):
+    """
+    Returns (fig, per_unit).
+    style: "square" (default) or "stick" (🧍 emoji).
+    """
     # --- Helper functions ---
     def _bucket_size(e):
         if per_unit:
             return per_unit
         if e > 2000: return 10
-        if e > 800: return 5
+        if e > 800:  return 5
         return 1
 
     def _make_people_df(e, immune_rate, infected, hosp_rate, death_rate):
@@ -170,25 +171,18 @@ def people_outcomes_chart(enrollment, immune_rate, infected, hosp_rate, death_ra
         infected_non_hosp = max(total_infected - hospitalized, 0)
 
         return [
-            ("Immune (MMR-protected)", immune),
-            ("Susceptible (not infected)", not_infected),
-            ("Infected (no hospital stay)", infected_non_hosp),
-            ("Hospitalized", hospitalized - deaths),
-            ("Deaths", deaths),
+            ("Immune (MMR-protected)", immune, "#6aa84f"),
+            ("Susceptible (not infected)", not_infected, "#c9c9c9"),
+            ("Infected (no hospital stay)", infected_non_hosp, "#f6b26b"),
+            ("Hospitalized", hospitalized - deaths, "#e69138"),
+            ("Deaths", deaths, "#cc0000"),
         ]
 
     def _build_grid(counts, per_unit):
-        palette = {
-            "Immune (MMR-protected)": "#6aa84f",
-            "Susceptible (not infected)": "#c9c9c9",
-            "Infected (no hospital stay)": "#f6b26b",
-            "Hospitalized": "#e69138",
-            "Deaths": "#cc0000",
-        }
         units = []
-        for label, n in counts:
-            units_needed = int(math.ceil(n / per_unit)) if n > 0 else 0
-            units.extend([(label, palette[label])] * units_needed)
+        for label, n, color in counts:
+            squares = int(math.ceil(n / per_unit)) if n > 0 else 0
+            units.extend([(label, color)] * squares)
 
         N = len(units)
         cols = max(10, int(round(math.sqrt(N))))
@@ -199,42 +193,99 @@ def people_outcomes_chart(enrollment, immune_rate, infected, hosp_rate, death_ra
             r = i // cols
             c = i % cols
             xs.append(c)
-            ys.append(-r)
+            ys.append(-r)  # stack downward
             colors.append(color)
             labels.append(label)
-
         return xs, ys, colors, labels, cols, rows
 
-    # --- Build chart ---
+    # --- Build initial/final states ---
     pu = _bucket_size(enrollment)
     start_counts = _make_people_df(enrollment, immune_rate, 0, hosp_rate, death_rate)
     final_counts = _make_people_df(enrollment, immune_rate, infected, hosp_rate, death_rate)
 
-    trace0, cols, rows = _build_grid(start_counts, pu)
-    traceF, _, _ = _build_grid(final_counts, pu)
+    xs0, ys0, c0, labels0, cols, rows = _build_grid(start_counts, pu)
+    xsF, ysF, cF, labelsF, _, _        = _build_grid(final_counts, pu)
 
-    fig = go.Figure(
-        data=[go.Scatter(x=trace0[0], y=trace0[1], mode="markers",
-                         marker=dict(symbol="square", size=12, color=trace0[2]),
-                         text=trace0[3], hovertemplate="%{text}<extra></extra>", showlegend=False)],
-        frames=[go.Frame(data=[go.Scatter(x=traceF[0], y=traceF[1], mode="markers",
-                                          marker=dict(symbol="square", size=12, color=traceF[2]),
-                                          text=traceF[3], hovertemplate="%{text}<extra></extra>", showlegend=False)],
-                         name="final")]
-    )
+    # --- Choose glyph style ---
+    if style == "stick":
+    
+        def _traces_from_grid(xs, ys, colors, labels):
+            traces = []
+           
+            points_by_label = {}
+            for x, y, col, lab in zip(xs, ys, colors, labels):
+                points_by_label.setdefault(lab, {"x":[], "y":[], "color":col})
+                points_by_label[lab]["x"].append(x)
+                points_by_label[lab]["y"].append(y)
+            for lab, data in points_by_label.items():
+                traces.append(go.Scatter(
+                    x=data["x"], y=data["y"], mode="text",
+                    text=["🧍"]*len(data["x"]),
+                    textfont=dict(size=16, color=data["color"]),
+                    hovertemplate=f"{lab}<extra></extra>",
+                    showlegend=False
+                ))
+            return traces
 
+        data0 = _traces_from_grid(xs0, ys0, c0, labels0)
+        dataF = _traces_from_grid(xsF, ysF, cF, labelsF)
+        fig = go.Figure(data=data0, frames=[go.Frame(data=dataF, name="final")])
+
+        # Legend proxies
+        for name, _, color in [
+            ("Immune (MMR-protected)", 0, "#6aa84f"),
+            ("Susceptible (not infected)", 0, "#c9c9c9"),
+            ("Infected (no hospital stay)", 0, "#f6b26b"),
+            ("Hospitalized", 0, "#e69138"),
+            ("Deaths", 0, "#cc0000"),
+        ]:
+            fig.add_trace(go.Scatter(
+                x=[None], y=[None], mode="markers",
+                marker=dict(symbol="square", size=10, color=color),
+                name=name, showlegend=True
+            ))
+
+    else:
+        # Default square markers
+        trace0 = go.Scatter(
+            x=xs0, y=ys0, mode="markers",
+            marker=dict(symbol="square", size=12, color=c0, line=dict(width=0)),
+            text=labels0, hovertemplate="%{text}<extra></extra>", showlegend=False
+        )
+        traceF = go.Scatter(
+            x=xsF, y=ysF, mode="markers",
+            marker=dict(symbol="square", size=12, color=cF, line=dict(width=0)),
+            text=labelsF, hovertemplate="%{text}<extra></extra>", showlegend=False
+        )
+        fig = go.Figure(data=[trace0], frames=[go.Frame(data=[traceF], name="final")])
+        # Legend proxies
+        for name, _, color in [
+            ("Immune (MMR-protected)", 0, "#6aa84f"),
+            ("Susceptible (not infected)", 0, "#c9c9c9"),
+            ("Infected (no hospital stay)", 0, "#f6b26b"),
+            ("Hospitalized", 0, "#e69138"),
+            ("Deaths", 0, "#cc0000"),
+        ]:
+            fig.add_trace(go.Scatter(
+                x=[None], y=[None], mode="markers",
+                marker=dict(symbol="square", size=10, color=color),
+                name=name, showlegend=True
+            ))
+
+    # --- Layout + buttons ---
     fig.update_layout(
         xaxis=dict(visible=False, range=[-1, cols+1]),
         yaxis=dict(visible=False, range=[-(rows+1), 1]),
         plot_bgcolor="rgba(0,0,0,0)",
         margin=dict(t=10, b=10, l=10, r=10),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
         updatemenus=[dict(
             type="buttons",
-            x=0.0, y=1.12, xanchor="left", yanchor="top",
+            x=0.0, y=1.15, xanchor="left", yanchor="top",
             showactive=False,
             buttons=[
                 dict(label="▶ Start Outbreak", method="animate",
-                     args=[["final"], {"frame": {"duration": 700, "redraw": True},
+                     args=[["final"], {"frame": {"duration": 600, "redraw": True},
                                        "fromcurrent": True, "transition": {"duration": 250}}]),
                 dict(label="↺ Reset", method="animate",
                      args=[[None], {"frame": {"duration": 0, "redraw": True},
@@ -242,5 +293,4 @@ def people_outcomes_chart(enrollment, immune_rate, infected, hosp_rate, death_ra
             ],
         )],
     )
-
     return fig, pu
