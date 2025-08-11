@@ -1,4 +1,4 @@
-## views/tab5_az_school_risks.py
+# views/tab5_az_school_risks.py
 """
 Arizona School Risks — simplified, plain-language Tab 5
 
@@ -237,6 +237,10 @@ def render(df_schools: pd.DataFrame):
             """
         )
         st.info("For real-world guidance, consult ADHS and your local health authority.")
+
+
+def tab5_view(df_schools: pd.DataFrame):
+    render(df_schools)
 
 
 def tab5_view(df_schools: pd.DataFrame):
