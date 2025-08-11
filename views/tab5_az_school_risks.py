@@ -1,75 +1,41 @@
-import streamlit as st
-import pandas as pd
+# views/tab5_az_school_risks.py
+
+import math
 import numpy as np
+import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
+import streamlit as st
 from datetime import datetime, timedelta
 
-# Tunables
+from charts import people_outcomes_chart  
+
+# --- Tunables 
 R0_DEFAULT = 12
 HOSP_RATE = 0.20
 DEATH_RATE = 0.0003
 QUARANTINE_DAYS = 21
 ISOLATION_DAYS = 4
-SIM_DAYS = 90
-EPICURVE_Y_MAX = 15 # fixed y-axis max
+SIM_DAYS = 90  # descriptive text only (people chart is not time-based)
 
 def _plain_language_assumptions():
     st.markdown("""
-**What these settings mean (plain language):**
-- **R₀ (contagiousness):** higher means one sick person infects more people. We use 12.
-- **MMR immunization rate:** share of students protected by vaccine. Lower → more at risk.
-- **Hospitalization:** we assume ~20% of infections need hospital care.
-- **Death rate:** ~0.03% (rare, but not zero).
-- **Isolation:** sick students stay home for **4 days after rash** starts.
-- **Quarantine:** un/under-vaccinated exposed students stay home **21 days** after last exposure.
-- **Curve shape:** a typical outbreak that rises, peaks, then fades as fewer are susceptible.
+**Plain-language overview of assumptions**
+- **R₀ (contagiousness):** Higher means one sick person can infect more people. We use **12**.
+- **MMR immunization rate:** Share of students protected by vaccine. Lower coverage → more students at risk.
+- **Hospitalizations:** About **20%** of infections need hospital care (model assumption).
+- **Deaths:** Very rare but not zero — we use **0.03%** of infections.
+- **Isolation:** Students with measles stay home **4 days after rash** starts.
+- **Quarantine:** Un/under-vaccinated exposed students stay home **21 days** after last exposure.
+- **Outbreak dynamics (simplified):** Outbreak grows, peaks, then fades as fewer students remain susceptible.
 """)
 
-def _gamma_like_distribution(days):
-    dist = (days**5) * np.exp(-days / 2)
-    return dist / dist.sum() if dist.sum() > 0 else dist
-
-def _slider_only_epicurve(days, daily, y_max=EPICURVE_Y_MAX):
-    frames = []
-    for d in range(len(days)):
-        y_frame = np.where(days <= d, daily, 0)
-        frames.append(go.Frame(data=[go.Bar(x=days, y=y_frame)], name=str(d)))
-
-    # initial frame = day 0
-    base_y = np.where(days <= 0, daily, 0)
-    fig = go.Figure(
-        data=[go.Bar(
-            x=days,
-            y=base_y,
-            marker_color=px.colors.sequential.Cividis[-2],
-            hovertemplate='Day %{x}<br>Cases %{y:.0f}<extra></extra>'
-        )],
-        frames=frames
-    )
-    fig.update_layout(
-        xaxis=dict(title="Days since Introduction", showgrid=False, range=[0, days.max()]),
-        yaxis=dict(title="Daily New Cases (students)", showgrid=False, range=[0, y_max]),
-        plot_bgcolor='rgba(0,0,0,0)',
-        margin=dict(t=20, b=0),
-        sliders=[dict(
-            active=0, y=1.05, x=0.12,
-            currentvalue=dict(prefix="Day ", visible=True, xanchor="right"),
-            steps=[dict(method="animate", label=str(d),
-                        args=[[str(d)], {"frame": {"duration": 0, "redraw": True}, "mode": "immediate"}])
-                   for d in range(len(days))]
-        )]
-        # No updatemenus → no play/pause btoutns
-    )
-    return fig
-
-def tab5_view(df_schools):
-    # --- Header ---
+def tab5_view(df_schools: pd.DataFrame):
+    # --- Header & callouts ---
     st.markdown("""
     <div style='text-align:center; margin-bottom:1.5em;'>
       <h1 style='margin-bottom:0.2em;'>Arizona Measles Outbreak Simulator</h1>
       <p style='font-size:1.05rem; margin-top:0; margin-bottom:0.5em;'>
-        Estimate the impact of measles on a school: infections, hospitalizations, absences, and more.
+        Estimate the impact of measles on a school community: infections, hospitalizations, absences, and more.
         <br><em>Note: Schools with fewer than 20 kindergarten students are excluded from the list.</em>
       </p>
       <h2 style='text-align:center; margin:0.75em 0 0.5em;'>Assumptions & Data Sources</h2>
@@ -91,10 +57,10 @@ def tab5_view(df_schools):
         <strong>Death Rate:</strong><br>0.03% <a href="https://www.uchicagomedicine.org/forefront/pediatrics-articles/measles-is-still-a-very-dangerous-disease" target="_blank" style="color:#a5c9ff;">UChicago</a>
       </div>
       <div tabindex="0" title='Isolation Period = 4 days post-rash (AAC R9-6-355)' style='background:#5A4E7A; color:white; padding:1rem; border-radius:10px; width:200px; cursor:help;'>
-        <strong>Isolation:</strong><br>4 days <a href="https://www.azdhs.gov/documents/…/measles-protocol.pdf" target="_blank" style="color:#a5c9ff;">Protocol</a>
+        <strong>Isolation:</strong><br>4 days <a href="#" style="color:#a5c9ff;">Protocol</a>
       </div>
-      <div tabindex="0" title='Quarantine Period= 21 days (ADHS)' style='background:#6d6b85; color:white; padding:1rem; border-radius:10px; width:200px; cursor:help;'>
-        <strong>Quarantine:</strong><br>21 days <a href="https://www.azdhs.gov/documents/…/mmr-guidance.pdf" target="_blank" style="color:#a5c9ff;">ADHS</a>
+      <div tabindex="0" title='Quarantine Period = 21 days (ADHS)' style='background:#6d6b85; color:white; padding:1rem; border-radius:10px; width:200px; cursor:help;'>
+        <strong>Quarantine:</strong><br>21 days <a href="#" style="color:#a5c9ff;">ADHS</a>
       </div>
     </div>
     """, unsafe_allow_html=True)
@@ -102,11 +68,12 @@ def tab5_view(df_schools):
     with st.expander("What do these assumptions mean? (plain language)", expanded=False):
         _plain_language_assumptions()
 
-    # --- Simulation Mode & School Details ---
+    # --- Inputs ---
     st.markdown("---")
     st.markdown("<h2 style='text-align:center; margin:0.75em 0 0.5em;'>Choose Simulation Mode</h2>", unsafe_allow_html=True)
+    # accessibility-safe: non-empty label + hidden
     mode = st.radio("Simulation mode", ["Select a School", "Enter Custom Values"],
-                    horizontal=True, label_visibility="collapsed")  # accessibility fix
+                    horizontal=True, label_visibility="collapsed")
 
     if mode == "Select a School":
         sel = st.selectbox("School", df_schools["SCHOOL NAME"].sort_values(), index=0)
@@ -138,9 +105,9 @@ def tab5_view(df_schools):
     </div>
     """, unsafe_allow_html=True)
 
-    # --- Simulation Calculations ---
+    # --- Core outbreak math (simple illustrative final-size model) ---
     R0 = R0_DEFAULT
-    st.number_input("Initial Infected Students", min_value=1, max_value=200, value=1, step=1, key="init_cases")  # kept for UI parity
+    st.number_input("Initial Infected Students", min_value=1, max_value=200, value=1, step=1, key="init_cases")
     s_frac = susceptible / enrollment if enrollment else 0
     z = 0.0001
     for _ in range(60):
@@ -156,25 +123,33 @@ def tab5_view(df_schools):
     quarantine_missed = noninfected * q_days
     total_days_missed = isolate_missed + quarantine_missed
 
-    # --- Estimated Daily Measles Cases (slider animation, fixed y) ---
-    days = np.arange(0, SIM_DAYS)
-    daily = _gamma_like_distribution(days) * total_cases
-    fig = _slider_only_epicurve(days, daily, y_max=EPICURVE_Y_MAX)
-    st.plotly_chart(fig, use_container_width=True, config={"responsive": True})
+    # --- People (waffle) chart using charts.py, with a Start Outbreak button inside the chart ---
+    fig_people, per_unit = people_outcomes_chart(
+        enrollment=enrollment,
+        immune_rate=immune,
+        infected=total_cases,
+        hosp_rate=hosp_rate,
+        death_rate=death_rate
+    )
+    st.plotly_chart(fig_people, use_container_width=True, config={"responsive": True})
 
-    st.markdown("<h2 style='text-align:center; margin:0.75em 0 0.5em;'>Estimated Daily Measles Cases</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align:center; margin:0.75em 0 0.5em;'>What this means in people</h2>", unsafe_allow_html=True)
     st.markdown(f"""
     <div class="blocked-text">
-      This chart shows estimated new cases by day for {SIM_DAYS} days after measles is introduced.
-      The **y-axis is fixed** at {EPICURVE_Y_MAX} students/day so different schools can be compared fairly.
-      Drag the slider to watch how the outbreak grows and fades over time.
+      Each square represents <strong>{per_unit}</strong> student{'s' if per_unit>1 else ''}. Colors show:
+      <span style="color:#6aa84f;">Immune</span>,
+      <span style="color:#c9c9c9;">Susceptible (not infected)</span>,
+      <span style="color:#f6b26b;">Infected (no hospital stay)</span>,
+      <span style="color:#e69138;">Hospitalized</span>,
+      <span style="color:#cc0000;">Deaths</span>.
+      Click <strong>Start Outbreak</strong> to reveal how many students those outcomes represent in this scenario.
     </div>
     """, unsafe_allow_html=True)
 
     # --- School Calendar: Exclusion (Quarantine) Days ---
     school_days, curr = [], datetime.today().date()
     while len(school_days) < 30:
-        if curr.weekday() < 5:
+        if curr.weekday() < 5:  # Mon–Fri
             school_days.append(curr)
         curr += timedelta(days=1)
     exclusion_days = set(school_days[:q_days])
@@ -203,18 +178,18 @@ def tab5_view(df_schools):
     st.markdown("<h2 style='text-align:center; margin:0.75em 0 0.5em;'>School Calendar: Exclusion (Quarantine) Days</h2>", unsafe_allow_html=True)
     st.markdown(f"""
     <div class="blocked-text">
-      <strong>What the calendar means:</strong> students with measles stay home for <strong>{ISOLATION_DAYS} days after rash</strong>.
-      Unvaccinated or not fully vaccinated exposed students are kept home for <strong>{QUARANTINE_DAYS} days</strong> after their last exposure.
-      The shaded dates show the next 30 school weekdays with potential quarantine days if an outbreak began now.
+      <strong>What the calendar shows:</strong> Students with measles stay home for <strong>{ISOLATION_DAYS} days after rash</strong>.
+      Unvaccinated or not fully vaccinated exposed students are kept home for <strong>{QUARANTINE_DAYS} days</strong> after last exposure.
+      The shaded dates mark the next 30 school weekdays with possible exclusion days if an outbreak began now.
     </div>
     """, unsafe_allow_html=True)
 
-    # --- Outbreak Summary ---
+    # --- Outbreak Summary tiles ---
     st.markdown("---")
     st.markdown("<h2 style='text-align:center; margin:0.75em 0 0.5em;'>Outbreak Summary</h2>", unsafe_allow_html=True)
     colors = px.colors.sequential.Cividis
     st.markdown(f"""
-    <div style='display:flex; flex-wrap:wrap; justify-content:center; gap:1rem; margin-bottom:2em;'>
+    <div style='display:flex; flex-wrap:wrap; justify-content:center; gap:1rem; margin-bottom:1em;'>
       <div title='Total infections among susceptible students' style='background:{colors[-3]}; color:white; padding:1rem; border-radius:8px; width:180px;'>
         <strong>Total Infected</strong><br>{int(total_cases):,}
       </div>
@@ -236,10 +211,22 @@ def tab5_view(df_schools):
     </div>
     """, unsafe_allow_html=True)
 
-    # --- Disclaimer ---
+    # --- Plain-language notes (educational) ---
     st.markdown("""
-    <div class="blocked-text">
-      <strong>Disclaimer:</strong> This tool simplifies complex public health dynamics and assumes no extra interventions (like targeted vaccination, masking, or school closures). It also ignores holidays and behavior changes. Use for illustration and planning only; consult ADHS for real-time guidance and requirements.
+**Plain-language notes (education)**
+- **Total Infected:** Students who catch measles among those not protected by MMR.
+- **Hospitalizations:** About **1 in 5** infections need hospital care in this model.
+- **Deaths:** Very rare, but possible — we use **0.03%** of infections.
+- **Exposed Students:** Had contact but didn’t get sick; they still miss school during quarantine.
+- **Missed Days:** Sick students miss **4 days** after rash; exposed but not sick miss **21 days**.
+- **Attack Rate:** Percent of susceptible students who end up infected in this scenario.
+""")
+
+    # --- Disclaimer (education purpose) ---
+    st.markdown("""
+    <div class="blocked-text" style="margin-top:0.5rem;">
+      <strong>Educational disclaimer:</strong> This simulator is for education and planning only. It simplifies real-world
+      public health dynamics and assumes no extra interventions (e.g., targeted vaccination, masking, closures).
+      It also ignores holidays and behavior changes. For real-time guidance, consult ADHS and your local health authority.
     </div>
     """, unsafe_allow_html=True)
-
