@@ -9,11 +9,6 @@ def tab5_view(df_schools):
     # --- Custom CSS for better styling ---
     st.markdown("""
     <style>
-    .info-dropdown {
-        margin-top: 5px;
-        font-size: 0.85rem;
-        line-height: 1.4;
-    }
     .educational-note {
         background: #e8f4fd;
         border-left: 4px solid #1f77b4;
@@ -77,7 +72,7 @@ def tab5_view(df_schools):
             "link": "https://pubmed.ncbi.nlm.nih.gov/28757186/",
             "link_text": "PubMed",
             "bg_color": "#2f2e41",
-            "explanation": "R₀ (R-naught) is the basic reproduction number - how many people one infected person will infect on average in a completely susceptible population. Measles has an R₀ of 12, making it one of the most contagious diseases. For comparison: COVID-19 original strain ≈ 2-3, Seasonal flu ≈ 1.3."
+            "explanation": "R₀ (R-naught) is the basic reproduction number - how many people one infected person will infect on average in a completely susceptible population. Measles has an R₀ of 12, making it one of the most contagious diseases. For comparison: COVID-19 original strain approximately 2-3, Seasonal flu approximately 1.3."
         },
         {
             "title": "MMR Rate: ADHS 2024–25",
@@ -128,7 +123,7 @@ def tab5_view(df_schools):
             """, unsafe_allow_html=True)
             
             with st.expander("What does this mean?"):
-                st.markdown(assumption['explanation'])
+                st.write(assumption['explanation'])
 
     # --- Interactive Learning Section ---
     st.markdown("---")
@@ -176,7 +171,7 @@ def tab5_view(df_schools):
         </div>
         """, unsafe_allow_html=True)
         with st.expander("What does this mean?"):
-            st.markdown("This is the total number of kindergarten students enrolled at the school. Kindergarten students are often used in outbreak modeling because they have the most recent vaccination data and spend lots of time in close contact.")
+            st.write("This is the total number of kindergarten students enrolled at the school. Kindergarten students are often used in outbreak modeling because they have the most recent vaccination data and spend lots of time in close contact.")
     
     with detail_cols[1]:
         st.markdown(f"""
@@ -184,11 +179,12 @@ def tab5_view(df_schools):
           <strong>MMR Coverage:</strong><br>{immune*100:.1f}%
         </div>
         """, unsafe_allow_html=True)
-        with st.expander("💉 What does this mean?"):
-            st.markdown(f"""
+        with st.expander("What does this mean?"):
+            status = 'Above herd immunity threshold' if immune >= 0.917 else 'Below herd immunity threshold'
+            st.write(f"""
             This is the percentage of students who are immune to measles (usually through vaccination). 
             
-            **Current status**: {'Above herd immunity threshold' if immune >= 0.917 else 'Below herd immunity threshold'}
+            **Current status**: {status}
             
             Arizona requires 95% MMR coverage, but allows exemptions for medical, religious, or personal beliefs.
             """)
@@ -199,11 +195,12 @@ def tab5_view(df_schools):
           <strong>Susceptible Students:</strong><br>{int(susceptible):,}
         </div>
         """, unsafe_allow_html=True)
-        with st.expander("🎯 What does this mean?"):
-            st.markdown(f"""
+        with st.expander("What does this mean?"):
+            risk_level = 'Low risk' if susceptible < enrollment * 0.1 else 'Moderate risk' if susceptible < enrollment * 0.2 else 'High risk'
+            st.write(f"""
             These are students who could get measles if exposed - calculated as: Total Students × (1 - Vaccination Rate)
             
-            **Risk level**: {'Low risk' if susceptible < enrollment * 0.1 else 'Moderate risk' if susceptible < enrollment * 0.2 else 'High risk'}
+            **Risk level**: {risk_level}
             
             The more susceptible students, the faster and larger an outbreak can become.
             """)
@@ -283,19 +280,20 @@ def tab5_view(df_schools):
     # --- Interactive Timeline ---
     with st.expander("Interactive Disease Timeline", expanded=False):
         timeline_day = st.slider("Explore the timeline: Day", 0, 30, 0)
+        stage_description = (
+            "The outbreak is just beginning. Most students are still susceptible." if timeline_day < 5 else
+            "Cases are rising rapidly as the virus spreads through the school." if timeline_day < 15 else
+            "The outbreak is peaking. Many susceptible students have been exposed." if timeline_day < 25 else
+            "The outbreak is winding down. Few susceptible students remain."
+        )
+        
         st.markdown(f"""
         **Day {timeline_day}:**
         - New cases today: {daily[timeline_day]:.1f} students
         - Total cases so far: {np.cumsum(daily)[timeline_day]:.0f} students
         - Remaining susceptible: {susceptible - np.cumsum(daily)[timeline_day]:.0f} students
         
-        **What's happening?**
-        {
-        "The outbreak is just beginning. Most students are still susceptible." if timeline_day < 5 else
-        "Cases are rising rapidly as the virus spreads through the school." if timeline_day < 15 else
-        "The outbreak is peaking. Many susceptible students have been exposed." if timeline_day < 25 else
-        "The outbreak is winding down. Few susceptible students remain."
-        }
+        **What's happening?** {stage_description}
         """)
 
     # --- School Calendar: Exclusion (Quarantine) Days ---
@@ -400,7 +398,7 @@ def tab5_view(df_schools):
             """, unsafe_allow_html=True)
             
             with st.expander(f"Understanding {item['title']}"):
-                st.markdown(item['explanation'])
+                st.write(item['explanation'])
 
     # --- Educational Comparison Tool ---
     st.markdown("---")
