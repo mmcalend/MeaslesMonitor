@@ -25,7 +25,7 @@ def tab1_view(df, df_cdc_us):
     fig.update_traces(textposition="inside", textfont_size=12)
     fig.update_layout(
         xaxis=dict(categoryorder="array", categoryarray=all_weeks),
-        coloraxis_colorbar=dict(title="", x=0.05, tickvals=[])
+        coloraxis_colorbar=dict(title="", x=2, tickvals=[])
     )
     fig = apply_common_plot_layout(fig, "")
     st.plotly_chart(fig, use_container_width=True, config={"responsive": True})
