@@ -28,3 +28,29 @@ def apply_common_plot_layout(fig, title, colorbar=False):
 def normalize(d):
     total = sum(d.values())
     return {k: v / total if total else 0 for k, v in d.items()}
+
+def custom_expander(title, content_md, open=False):
+    """
+    Custom collapsible section to replace st.expander and avoid duplicate heading bug.
+    """
+    open_attr = "open" if open else ""
+    html = f"""
+    <details {open_attr} style="
+        margin-bottom:1rem;
+        background-color:#1e1e1e;
+        border-radius:8px;
+        padding:0.5rem;
+        border: 1px solid #555;
+    ">
+      <summary style="
+          font-weight:bold;
+          cursor:pointer;
+          color:white;
+          font-size:1.05rem;
+      ">{title}</summary>
+      <div style="margin-top:0.75rem; color:white; line-height:1.5;">
+        {content_md}
+      </div>
+    </details>
+    """
+    st.markdown(html, unsafe_allow_html=True)
