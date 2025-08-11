@@ -9,28 +9,6 @@ def tab5_view(df_schools):
     # --- Custom CSS for better styling ---
     st.markdown("""
     <style>
-    .educational-note {
-        background: #e8f4fd;
-        border-left: 4px solid #1f77b4;
-        padding: 10px;
-        margin: 10px 0;
-        border-radius: 5px;
-    }
-    .warning-note {
-        background: #fff3cd;
-        border-left: 4px solid #ffc107;
-        padding: 10px;
-        margin: 10px 0;
-        border-radius: 5px;
-    }
-    .blocked-text {
-        background: #f8f9fa;
-        border: 1px solid #dee2e6;
-        padding: 15px;
-        margin: 10px 0;
-        border-radius: 5px;
-        line-height: 1.6;
-    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -207,17 +185,9 @@ def tab5_view(df_schools):
 
     # Show vaccination impact
     if immune < 0.917:
-        st.markdown("""
-        <div class="warning-note">
-          <strong>Below Herd Immunity Threshold:</strong> With vaccination rates below 91.7%, this school community is vulnerable to measles outbreaks. Even a single case could lead to widespread transmission.
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("**Below Herd Immunity Threshold:** With vaccination rates below 91.7%, this school community is vulnerable to measles outbreaks. Even a single case could lead to widespread transmission.")
     else:
-        st.markdown("""
-        <div class="educational-note">
-          <strong>Above Herd Immunity Threshold:</strong> This school has strong community protection! High vaccination rates make large outbreaks unlikely.
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("**Above Herd Immunity Threshold:** This school has strong community protection! High vaccination rates make large outbreaks unlikely.")
 
     # --- Simulation Calculations ---
     R0 = 12
@@ -270,12 +240,10 @@ def tab5_view(df_schools):
     st.plotly_chart(fig, use_container_width=True, config={"responsive": True})
     
     st.markdown("""
-    <div class="blocked-text">
-      This bar chart shows the projected number of new measles cases per school day over a 90-day period following the introduction of the virus into the school.
-      The curve follows a gamma distribution: it rises gradually as the outbreak grows, peaks around Day 12 when most susceptible students have been exposed, then tapers off as fewer susceptibles remain.
-      Hover over each bar to see exact numbers and cumulative cases.
-    </div>
-    """, unsafe_allow_html=True)
+    This bar chart shows the projected number of new measles cases per school day over a 90-day period following the introduction of the virus into the school.
+    The curve follows a gamma distribution: it rises gradually as the outbreak grows, peaks around Day 12 when most susceptible students have been exposed, then tapers off as fewer susceptibles remain.
+    Hover over each bar to see exact numbers and cumulative cases.
+    """)
 
     # --- Interactive Timeline ---
     with st.expander("Interactive Disease Timeline", expanded=False):
@@ -333,12 +301,10 @@ def tab5_view(df_schools):
     st.markdown(cal_html, unsafe_allow_html=True)
     
     st.markdown("""
-    <div class="blocked-text">
-      Confirmed measles cases must be kept out of school from symptom onset through 4 days after rash onset.
-      Unvaccinated or incompletely vaccinated exposed students are excluded for 21 days after last exposure.
-      This calendar shows the next 30 school weekdays with shaded cells marking quarantine days. The dark cells represent days when unvaccinated students would be excluded from school.
-    </div>
-    """, unsafe_allow_html=True)
+    Confirmed measles cases must be kept out of school from symptom onset through 4 days after rash onset.
+    Unvaccinated or incompletely vaccinated exposed students are excluded for 21 days after last exposure.
+    This calendar shows the next 30 school weekdays with shaded cells marking quarantine days. The dark cells represent days when unvaccinated students would be excluded from school.
+    """)
 
     # --- Enhanced Outbreak Summary with Explanatory Dropdowns ---
     st.markdown("---")
@@ -428,11 +394,9 @@ def tab5_view(df_schools):
 
     # --- Disclaimer ---
     st.markdown("""
-    <div class="blocked-text">
-      <strong>Educational Disclaimer:</strong> This simulator is designed for educational purposes to help understand disease transmission dynamics. 
-      It uses simplified mathematical models with fixed parameters and assumes no additional public health interventions during an outbreak. 
-      Real outbreaks involve complex factors including behavior changes, public health responses, and seasonal variations. 
-      The model excludes holidays and weekends from school day calculations. For actual outbreak response and guidance, 
-      always consult the Arizona Department of Health Services (ADHS) and local public health authorities.
-    </div>
-    """, unsafe_allow_html=True)
+    **Educational Disclaimer:** This simulator is designed for educational purposes to help understand disease transmission dynamics. 
+    It uses simplified mathematical models with fixed parameters and assumes no additional public health interventions during an outbreak. 
+    Real outbreaks involve complex factors including behavior changes, public health responses, and seasonal variations. 
+    The model excludes holidays and weekends from school day calculations. For actual outbreak response and guidance, 
+    always consult the Arizona Department of Health Services (ADHS) and local public health authorities.
+    """)
