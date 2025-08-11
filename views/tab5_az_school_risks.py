@@ -51,7 +51,7 @@ def tab5_view(df_schools):
     """, unsafe_allow_html=True)
 
     # Educational context section
-    with st.expander("🎓 Understanding Disease Transmission (Click to Learn More)", expanded=False):
+    with st.expander("Understanding Disease Transmission (Click to Learn More)", expanded=False):
         st.markdown("""
         **Why is measles so contagious?**
         
@@ -127,12 +127,12 @@ def tab5_view(df_schools):
             </div>
             """, unsafe_allow_html=True)
             
-            with st.expander(f"ℹ️ What does this mean?"):
-                st.markdown(f"<div class='info-dropdown'>{assumption['explanation']}</div>", unsafe_allow_html=True)
+            with st.expander("What does this mean?"):
+                st.markdown(assumption['explanation'])
 
     # --- Interactive Learning Section ---
     st.markdown("---")
-    with st.expander("🧮 Try This: Herd Immunity Calculator", expanded=False):
+    with st.expander("Try This: Herd Immunity Calculator", expanded=False):
         st.markdown("**Calculate the vaccination rate needed for herd immunity:**")
         herd_immunity_threshold = (1 - 1/12) * 100  # (1 - 1/R₀) × 100
         st.markdown(f"""
@@ -175,7 +175,7 @@ def tab5_view(df_schools):
           <strong>Total Students:</strong><br>{enrollment:,}
         </div>
         """, unsafe_allow_html=True)
-        with st.expander("📚 What does this mean?"):
+        with st.expander("What does this mean?"):
             st.markdown("This is the total number of kindergarten students enrolled at the school. Kindergarten students are often used in outbreak modeling because they have the most recent vaccination data and spend lots of time in close contact.")
     
     with detail_cols[1]:
@@ -188,7 +188,7 @@ def tab5_view(df_schools):
             st.markdown(f"""
             This is the percentage of students who are immune to measles (usually through vaccination). 
             
-            **Current status**: {'✅ Above herd immunity threshold' if immune >= 0.917 else '⚠️ Below herd immunity threshold'}
+            **Current status**: {'Above herd immunity threshold' if immune >= 0.917 else 'Below herd immunity threshold'}
             
             Arizona requires 95% MMR coverage, but allows exemptions for medical, religious, or personal beliefs.
             """)
@@ -203,7 +203,7 @@ def tab5_view(df_schools):
             st.markdown(f"""
             These are students who could get measles if exposed - calculated as: Total Students × (1 - Vaccination Rate)
             
-            **Risk level**: {'🟢 Low risk' if susceptible < enrollment * 0.1 else '🟡 Moderate risk' if susceptible < enrollment * 0.2 else '🔴 High risk'}
+            **Risk level**: {'Low risk' if susceptible < enrollment * 0.1 else 'Moderate risk' if susceptible < enrollment * 0.2 else 'High risk'}
             
             The more susceptible students, the faster and larger an outbreak can become.
             """)
@@ -212,13 +212,13 @@ def tab5_view(df_schools):
     if immune < 0.917:
         st.markdown("""
         <div class="warning-note">
-          <strong>⚠️ Below Herd Immunity Threshold:</strong> With vaccination rates below 91.7%, this school community is vulnerable to measles outbreaks. Even a single case could lead to widespread transmission.
+          <strong>Below Herd Immunity Threshold:</strong> With vaccination rates below 91.7%, this school community is vulnerable to measles outbreaks. Even a single case could lead to widespread transmission.
         </div>
         """, unsafe_allow_html=True)
     else:
         st.markdown("""
         <div class="educational-note">
-          <strong>✅ Above Herd Immunity Threshold:</strong> This school has strong community protection! High vaccination rates make large outbreaks unlikely.
+          <strong>Above Herd Immunity Threshold:</strong> This school has strong community protection! High vaccination rates make large outbreaks unlikely.
         </div>
         """, unsafe_allow_html=True)
 
@@ -281,7 +281,7 @@ def tab5_view(df_schools):
     """, unsafe_allow_html=True)
 
     # --- Interactive Timeline ---
-    with st.expander("📅 Interactive Disease Timeline", expanded=False):
+    with st.expander("Interactive Disease Timeline", expanded=False):
         timeline_day = st.slider("Explore the timeline: Day", 0, 30, 0)
         st.markdown(f"""
         **Day {timeline_day}:**
@@ -399,12 +399,12 @@ def tab5_view(df_schools):
             </div>
             """, unsafe_allow_html=True)
             
-            with st.expander(f"📊 Understanding {item['title']}"):
-                st.markdown(f"<div class='info-dropdown'>{item['explanation']}</div>", unsafe_allow_html=True)
+            with st.expander(f"Understanding {item['title']}"):
+                st.markdown(item['explanation'])
 
     # --- Educational Comparison Tool ---
     st.markdown("---")
-    with st.expander("🔍 Compare Different Scenarios", expanded=False):
+    with st.expander("Compare Different Scenarios", expanded=False):
         st.markdown("**See how vaccination rates affect outbreak size:**")
         
         comparison_rates = [0.70, 0.85, 0.92, 0.95]
