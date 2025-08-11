@@ -252,7 +252,7 @@ def tab5_view(df_schools: pd.DataFrame):
         )
 
     # ---------------------------------------------------------------------
-    # 8) What if we vaccinate more? 
+    # 8) What if we vaccinate more? (placed BELOW the results)
     # ---------------------------------------------------------------------
     st.markdown("---")
     st.markdown("### What if we vaccinate more?")
