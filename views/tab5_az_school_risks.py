@@ -6,39 +6,6 @@ import plotly.graph_objects as go
 from datetime import datetime, timedelta
 
 def tab5_view(df_schools):
-    # --- Custom CSS for better styling ---
-    st.markdown("""
-    <style>
-    .info-dropdown {
-        margin-top: 5px;
-        font-size: 0.85rem;
-        line-height: 1.4;
-    }
-    .educational-note {
-        background: #e8f4fd;
-        border-left: 4px solid #1f77b4;
-        padding: 10px;
-        margin: 10px 0;
-        border-radius: 5px;
-    }
-    .warning-note {
-        background: #fff3cd;
-        border-left: 4px solid #ffc107;
-        padding: 10px;
-        margin: 10px 0;
-        border-radius: 5px;
-    }
-    .blocked-text {
-        background: #f8f9fa;
-        border: 1px solid #dee2e6;
-        padding: 15px;
-        margin: 10px 0;
-        border-radius: 5px;
-        line-height: 1.6;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
     # --- Header & Educational Introduction ---
     st.markdown("""
     <div style='text-align:center; margin-bottom:1.5em;'>
@@ -402,31 +369,6 @@ def tab5_view(df_schools):
             with st.expander(f"Understanding {item['title']}"):
                 st.markdown(item['explanation'])
 
-    # --- Educational Comparison Tool ---
-    st.markdown("---")
-    with st.expander("Compare Different Scenarios", expanded=False):
-        st.markdown("**See how vaccination rates affect outbreak size:**")
-        
-        comparison_rates = [0.70, 0.85, 0.92, 0.95]
-        comparison_data = []
-        
-        for rate in comparison_rates:
-            comp_susceptible = enrollment * (1 - rate)
-            comp_s_frac = comp_susceptible / enrollment if enrollment else 0
-            comp_z = 0.0001
-            for _ in range(50):
-                comp_z = 1 - np.exp(-R0 * comp_z * comp_s_frac)
-            comp_attack = min(comp_z, 1.0)
-            comp_cases = comp_attack * comp_susceptible
-            comparison_data.append({
-                'Vaccination Rate': f"{rate*100:.0f}%",
-                'Total Cases': int(comp_cases),
-                'Hospitalizations': int(comp_cases * 0.2)
-            })
-        
-        comp_df = pd.DataFrame(comparison_data)
-        st.dataframe(comp_df, hide_index=True)
-        st.markdown("*Notice how vaccination rates above 92% dramatically reduce outbreak size!*")
 
     # --- Disclaimer ---
     st.markdown("""
