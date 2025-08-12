@@ -1,4 +1,4 @@
-# --- app.py ---
+f# --- app.py ---
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -40,7 +40,6 @@ from views import (
     tab2_outbreak_map,
     tab3_then_vs_now,
     tab4_demographic_lens,
-    tab5_az_school_risks,
 )
 from data import load_all_data
 
@@ -56,7 +55,6 @@ PAGES = {
     "Outbreak Map": lambda: tab2_outbreak_map.tab2_view(df),
     "Then vs. Now": lambda: tab3_then_vs_now.tab3_view(df, df19, mmr),
     "Demographics": lambda: tab4_demographic_lens.tab4_view(dfdetails),
-    "AZ School Risks": lambda: tab5_az_school_risks.tab5_view(df_schools),
 }
 
 if is_mobile:
