@@ -48,7 +48,7 @@ def tab1_view(df, df_cdc_us):
     st.markdown("""
     <div style='font-size: 0.8rem;'>
         Data Sources: <br>
-        <a href='https://www.cdc.gov/measles/data-research.html' target='_blank'> U.S. Centers for Disease Control and Prevention (CDC) </a> (U.S. Level). <br>
+        <a href='https://www.cdc.gov/measles/data-research/index.html' target='_blank'> U.S. Centers for Disease Control and Prevention (CDC) </a> (U.S. Level). <br>
         <a href='https://github.com/CSSEGISandData/measles_data' target='_blank'>JHU Measles Tracking Team</a> (State Level) 
     </div>
     """, unsafe_allow_html=True)
